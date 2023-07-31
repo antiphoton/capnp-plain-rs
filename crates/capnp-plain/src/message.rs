@@ -1,9 +1,15 @@
 pub mod segment;
 pub mod word;
 
-use crate::{message::word::word_slice::WordSlice, util::split_array::split_array_ref};
+use anyhow::Result;
 
-use self::segment::Segment;
+use crate::{
+    message::word::word_slice::WordSlice,
+    pointer::{struct_pointer::StructReader, Reader},
+    util::split_array::split_array_ref,
+};
+
+use self::{segment::Segment, word::word_ref::WordRef};
 
 pub struct Message {
     segments: Vec<Segment>,
@@ -27,6 +33,10 @@ impl Message {
             })
             .collect();
         Message { segments }
+    }
+    pub fn read_root(&self) -> Result<StructReader> {
+        let word_ref = WordRef::new(self, 0, 0);
+        Reader::new(word_ref)?.into_struct_reader()
     }
     pub fn dump(&self, indent: usize) {
         let tab = " ".repeat(indent);

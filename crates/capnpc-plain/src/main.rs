@@ -9,5 +9,16 @@ fn main() {
         buffer
     };
     let message = Message::from_bytes(&input);
-    message.dump(0);
+    let code_generator_request = message.read_root().unwrap();
+    let capnp_version = code_generator_request
+        .read_pointer(2)
+        .unwrap()
+        .into_struct_reader()
+        .unwrap();
+    println!(
+        "Capnp version: {}.{}.{}",
+        capnp_version.read_u16(0, 0),
+        capnp_version.read_u8(2, 0),
+        capnp_version.read_u8(3, 0)
+    );
 }

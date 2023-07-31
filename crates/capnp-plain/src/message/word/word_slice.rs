@@ -1,5 +1,7 @@
 use crate::message::Message;
 
+use super::word_ref::WordRef;
+
 pub struct WordSlice<'a> {
     message: &'a Message,
     segment_id: usize,
@@ -14,6 +16,17 @@ impl<'a> WordSlice<'a> {
             segment_id,
             offset,
             length,
+        }
+    }
+    pub fn get(&self, offset: usize) -> Option<WordRef> {
+        if offset < self.length {
+            Some(WordRef::new(
+                self.message,
+                self.segment_id,
+                self.offset + offset,
+            ))
+        } else {
+            None
         }
     }
     pub fn dump(&self, indent: usize) {
