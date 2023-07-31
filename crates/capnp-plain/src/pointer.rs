@@ -8,7 +8,7 @@ use crate::message::word::word_ref::WordRef;
 use crate::message::word::Word;
 
 use self::far_pointer::{read_far_pointer, FarPointer};
-use self::list_pointer::ListPointer;
+use self::list_pointer::{ListPointer, ListReader};
 use self::struct_pointer::{StructPointer, StructReader};
 
 pub enum Pointer {
@@ -32,12 +32,14 @@ impl TryFrom<Word> for Pointer {
 
 pub enum Reader<'a> {
     Struct(StructReader<'a>),
+    List(ListReader<'a>),
 }
 
 impl<'a> Reader<'a> {
     pub fn new_local(pointer: Pointer, content_base: WordRef<'a>) -> Result<Self> {
         let reader = match pointer {
             Pointer::Struct(p) => Self::Struct(StructReader::new(p, content_base)?),
+            Pointer::List(p) => Self::List(ListReader::new(p, content_base)?),
             _ => todo!(),
         };
         Ok(reader)
@@ -52,6 +54,13 @@ impl<'a> Reader<'a> {
     pub fn into_struct_reader(self) -> Result<StructReader<'a>> {
         match self {
             Self::Struct(x) => Ok(x),
+            _ => todo!(),
+        }
+    }
+    pub fn into_list_reader(self) -> Result<ListReader<'a>> {
+        match self {
+            Self::List(x) => Ok(x),
+            _ => todo!(),
         }
     }
 }

@@ -22,6 +22,7 @@ use crate::{
 
 use super::Reader;
 
+#[derive(Clone)]
 pub struct StructPointer {
     pub offset: isize,
     pub data_size: usize,

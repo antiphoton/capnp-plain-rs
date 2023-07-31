@@ -52,9 +52,7 @@ pub fn read_far_pointer(word_ref: WordRef) -> Result<Reader> {
         offset,
         segment_id,
     } = FarPointer::try_from(*word_ref)?;
-    word_ref.dump(0);
     let landing = word_ref.get_cousin(segment_id, offset);
-    landing.dump(0);
     ensure!(landing.0[0] % 4 != 2);
     if double_landing {
         let nested = FarPointer::try_from(*landing)?;
