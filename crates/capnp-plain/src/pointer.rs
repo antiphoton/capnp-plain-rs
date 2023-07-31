@@ -35,9 +35,9 @@ pub enum Reader<'a> {
 }
 
 impl<'a> Reader<'a> {
-    pub fn new_local(base: WordRef<'a>, pointer: Pointer) -> Result<Self> {
+    pub fn new_local(pointer: Pointer, content_base: WordRef<'a>) -> Result<Self> {
         let reader = match pointer {
-            Pointer::Struct(p) => Self::Struct(StructReader::new(base, p)?),
+            Pointer::Struct(p) => Self::Struct(StructReader::new(p, content_base)?),
             _ => todo!(),
         };
         Ok(reader)
@@ -46,7 +46,7 @@ impl<'a> Reader<'a> {
         let pointer = Pointer::try_from(*word_ref)?;
         match pointer {
             Pointer::Far(_) => read_far_pointer(word_ref),
-            _ => Self::new_local(word_ref, pointer),
+            _ => Self::new_local(pointer, word_ref.get_next()),
         }
     }
     pub fn into_struct_reader(self) -> Result<StructReader<'a>> {
