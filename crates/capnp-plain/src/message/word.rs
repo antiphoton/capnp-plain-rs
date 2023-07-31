@@ -1,0 +1,15 @@
+pub mod word_ref;
+pub mod word_slice;
+
+use anyhow::Error;
+
+#[derive(Clone, Copy)]
+pub struct Word(pub [u8; 8]);
+
+impl TryFrom<&[u8]> for Word {
+    type Error = Error;
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let a: &[u8; 8] = value.try_into()?;
+        Ok(Word(*a))
+    }
+}
