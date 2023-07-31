@@ -26,6 +26,9 @@ impl<'a> WordRef<'a> {
             offset,
         }
     }
+    pub fn get_next(&self) -> Self {
+        Self::new(self.message, self.segment_id, self.offset + 1)
+    }
     pub fn get_sibling(&self, offset: isize, length: usize) -> WordSlice<'a> {
         WordSlice::new(
             self.message,

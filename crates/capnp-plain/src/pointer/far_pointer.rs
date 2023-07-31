@@ -52,21 +52,17 @@ pub fn read_far_pointer(word_ref: WordRef) -> Result<Reader> {
         offset,
         segment_id,
     } = FarPointer::try_from(*word_ref)?;
-    dbg!();
-    word_ref.dump(0);
-    dbg!(FarPointer::try_from(*word_ref).unwrap());
     let landing = word_ref.get_cousin(segment_id, offset);
-    landing.dump(0);
     ensure!(landing.0[0] % 4 != 2);
     if double_landing {
         let nested = FarPointer::try_from(*landing)?;
         ensure!(nested.double_landing == false);
-        let base = word_ref.get_cousin(nested.segment_id, nested.offset);
+        let base = word_ref.get_cousin(nested.segment_id, nested.offset + 1);
         let tag_word = landing.get_sibling(1, 1);
         let pointer = Pointer::try_from(*tag_word.get(0).unwrap())?;
-        Reader::new_local(base, pointer)
+        Reader::new_local(pointer, base)
     } else {
         let pointer = Pointer::try_from(*landing)?;
-        Reader::new_local(landing, pointer)
+        Reader::new_local(pointer, landing.get_next())
     }
 }

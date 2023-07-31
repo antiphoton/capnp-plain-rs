@@ -10,15 +10,14 @@ fn main() {
     };
     let message = Message::from_bytes(&input);
     let code_generator_request = message.read_root().unwrap();
-    let capnp_version = code_generator_request
-        .read_pointer(2)
+    let nodes = code_generator_request
+        .read_pointer(0)
         .unwrap()
-        .into_struct_reader()
+        .into_list_reader()
         .unwrap();
-    println!(
-        "Capnp version: {}.{}.{}",
-        capnp_version.read_u16(0, 0),
-        capnp_version.read_u8(2, 0),
-        capnp_version.read_u8(3, 0)
-    );
+    for i in 0..nodes.len() {
+        let node = nodes.read_struct_child(i).unwrap();
+        let node_id = node.read_u64(0, 0);
+        println!("{:x}", node_id);
+    }
 }

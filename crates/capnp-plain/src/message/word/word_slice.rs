@@ -2,6 +2,7 @@ use crate::message::Message;
 
 use super::word_ref::WordRef;
 
+#[derive(Clone)]
 pub struct WordSlice<'a> {
     message: &'a Message,
     segment_id: usize,

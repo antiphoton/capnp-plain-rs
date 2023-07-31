@@ -22,6 +22,7 @@ use crate::{
 
 use super::Reader;
 
+#[derive(Clone)]
 pub struct StructPointer {
     pub offset: isize,
     pub data_size: usize,
@@ -49,14 +50,14 @@ pub struct StructReader<'a> {
 }
 
 impl<'a> StructReader<'a> {
-    pub fn new(base: WordRef<'a>, pointer: StructPointer) -> Result<Self> {
+    pub fn new(pointer: StructPointer, content_base: WordRef<'a>) -> Result<Self> {
         let StructPointer {
             offset,
             data_size,
             pointer_size,
         } = pointer;
-        let data = base.get_sibling(1 + offset, data_size);
-        let pointers = base.get_sibling(1 + offset + data_size as isize, pointer_size);
+        let data = content_base.get_sibling(offset, data_size);
+        let pointers = content_base.get_sibling(offset + data_size as isize, pointer_size);
         let reader = StructReader { data, pointers };
         Ok(reader)
     }
