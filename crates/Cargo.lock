@@ -19,5 +19,6 @@ dependencies = [
 name = "capnpc-plain"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "capnp-plain",
 ]

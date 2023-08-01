@@ -11,7 +11,7 @@
 //! D (16 bits) = Size of the struct's pointer section, in words.
 //! ```
 
-pub mod primitive_reader;
+mod primitive_reader;
 
 use anyhow::{Error, Result};
 
@@ -67,4 +67,8 @@ impl<'a> StructReader<'a> {
         };
         Reader::new(x)
     }
+}
+
+pub trait CapnpPlainStruct: Sized {
+    fn try_from_reader(reader: StructReader) -> Result<Self>;
 }
