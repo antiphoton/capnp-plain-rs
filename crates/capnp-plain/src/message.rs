@@ -5,7 +5,7 @@ use anyhow::Result;
 
 use crate::{
     message::word::word_slice::WordSlice,
-    pointer::{struct_pointer::StructReader, Reader},
+    pointer::{struct_pointer::CapnpPlainStruct, Reader},
     util::split_array::split_array_ref,
 };
 
@@ -34,9 +34,10 @@ impl Message {
             .collect();
         Message { segments }
     }
-    pub fn read_root(&self) -> Result<StructReader> {
+    pub fn read_root<T: CapnpPlainStruct>(&self) -> Result<T> {
         let word_ref = WordRef::new(self, 0, 0);
-        Reader::new(word_ref)?.into_struct_reader()
+        let reader = Reader::new(word_ref)?.into_struct_reader()?;
+        T::try_from_reader(reader)
     }
     pub fn dump(&self, indent: usize) {
         let tab = " ".repeat(indent);

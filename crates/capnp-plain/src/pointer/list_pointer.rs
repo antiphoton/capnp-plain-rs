@@ -20,16 +20,18 @@
 //!     when C = 7: Number of words in the list, not counting the tag word
 //!     (see below).
 
+mod primitive_reader;
+
 use anyhow::{ensure, Error, Result};
 
 use crate::message::word::{word_ref::WordRef, word_slice::WordSlice, Word};
 
 use super::{
     get_offset_bits,
-    struct_pointer::{StructPointer, StructReader},
+    struct_pointer::{CapnpPlainStruct, StructPointer, StructReader},
 };
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ScalarSize {
     Void,
     OneBit,
@@ -39,7 +41,7 @@ pub enum ScalarSize {
     EightBytes,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ElementSize {
     Scalar(ScalarSize),
     Pointer,
@@ -80,7 +82,7 @@ impl TryFrom<Word> for ListPointer {
 
 pub enum ListReader<'a> {
     Scalar {
-        element_size: ScalarSize,
+        scalar_size: ScalarSize,
         list_len: usize,
         data: WordSlice<'a>,
     },
@@ -111,6 +113,22 @@ impl<'a> ListReader<'a> {
                     data: content_base.get_sibling(offset + 1, list_len),
                 }
             }
+            ElementSize::Scalar(scalar_size) => {
+                let data_word_length = match scalar_size {
+                    ScalarSize::Void => 0,
+                    ScalarSize::OneBit => (list_len + 63) / 64,
+                    ScalarSize::OneByte => (list_len + 7) / 8,
+                    ScalarSize::TwoBytes => (list_len + 3) / 4,
+                    ScalarSize::FourBytes => (list_len + 1) / 2,
+                    ScalarSize::EightBytes => list_len,
+                };
+                let data = content_base.get_sibling(offset, data_word_length);
+                Self::Scalar {
+                    scalar_size,
+                    list_len,
+                    data,
+                }
+            }
             _ => todo!(),
         };
         Ok(reader)
@@ -130,6 +148,21 @@ impl<'a> ListReader<'a> {
                 ensure!(index < count);
                 let element_size = tag.data_size + tag.pointer_size;
                 StructReader::new(tag.clone(), data.get(element_size * index).unwrap())
+            }
+            _ => todo!(),
+        }
+    }
+    pub fn read_struct_children<T: CapnpPlainStruct>(&self) -> Result<Vec<T>> {
+        match self {
+            Self::Composite { count, tag, data } => {
+                let element_size = tag.data_size + tag.pointer_size;
+                let mut result = Vec::with_capacity(*count);
+                for index in 0..*count {
+                    let reader =
+                        StructReader::new(tag.clone(), data.get(element_size * index).unwrap())?;
+                    result.push(T::try_from_reader(reader)?);
+                }
+                Ok(result)
             }
             _ => todo!(),
         }
