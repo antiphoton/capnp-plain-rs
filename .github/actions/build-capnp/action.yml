@@ -19,8 +19,12 @@ runs:
         restore-keys: ${{ runner.os }}-bazel-
     - name: Install bazel
       shell: bash
+      env:
+        NPM_CONFIG_PREFIX: ~/.npm-global
       run: npm install -g @bazel/bazelisk
     - name: Build capnp
       shell: bash
       working-directory: third_party/capnproto/c++/src/capnp
+      env:
+        NPM_CONFIG_PREFIX: ~/.npm-global
       run: bazelisk build :capnp_tool
