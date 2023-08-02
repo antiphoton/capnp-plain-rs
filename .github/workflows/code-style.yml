@@ -9,14 +9,17 @@ on:
 jobs:
   Build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: crates
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/cache-cargo
       - uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --manifest-path ./crates/Cargo.toml -- --check
+          args: -- --check
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --manifest-path ./crates/Cargo.toml --all-features -- -D warnings
+          args: --all-features -- -D warnings
