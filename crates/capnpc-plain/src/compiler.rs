@@ -24,7 +24,10 @@ pub fn write_rust_code(code_generator_request: &CodeGeneratorRequest) -> Result<
     let tokens: TokenStream = tokens.into_iter().collect();
     let output = quote! {
         //! @generated
+        #![allow(dead_code)]
         #![allow(non_camel_case_types)]
+        use anyhow::Result;
+        use capnp_plain::pointer::struct_pointer::{CapnpPlainStruct, StructReader};
         #tokens
     };
     let output = syn::parse2(output)?;

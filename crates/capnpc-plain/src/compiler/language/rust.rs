@@ -1,5 +1,7 @@
 mod keyword;
 
+use std::collections::BTreeMap;
+
 use convert_case::{Case, Casing};
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
@@ -30,7 +32,7 @@ fn get_primitive(t: &Type) -> Option<TokenStream> {
     Some(t)
 }
 
-fn generate_common_struct(name: Ident, fields: &[Field]) -> TokenStream {
+fn generate_common_struct(name: &Ident, fields: &[&Field]) -> TokenStream {
     let fields: Vec<_> = fields
         .iter()
         .filter_map(|field| {
@@ -56,12 +58,10 @@ fn generate_common_struct(name: Ident, fields: &[Field]) -> TokenStream {
     delcaration
 }
 
-fn generate_union_struct(name: Ident, fields: &[Field], discriminant_count: u16) -> TokenStream {
-    let variants: Vec<_> = (0..discriminant_count)
-        .filter_map(|i| {
-            let Some(field) = fields.iter().find(|x| x.0.discriminant_value == i) else {
-                return None;
-            };
+fn generate_variant_struct(name: &Ident, fields: &BTreeMap<u16, &Field>) -> TokenStream {
+    let definitions: Vec<_> = fields
+        .iter()
+        .filter_map(|(_, field)| {
             let Some(Field_Union::Slot(slot) )= &field.1 else {
                 return None
             };
@@ -77,29 +77,70 @@ fn generate_union_struct(name: Ident, fields: &[Field], discriminant_count: u16)
             }
         })
         .collect();
+    let arms: Vec<_> = fields
+        .iter()
+        .filter_map(|(i, field)| {
+            let Some(Field_Union::Slot(slot) )= &field.1 else {
+                return None
+            };
+            let name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
+            let ty = &slot.r#type;
+            if ty == &Type::Void {
+                Some(quote! {
+                    #i => Self:: #name ,
+                })
+            } else {
+                None
+            }
+        })
+        .collect();
     let name = format_ident!("{}", name);
     let declaration = quote! {
         #[derive(Debug, PartialEq, Eq)]
         pub enum #name {
-            #(#variants )*
+            #(#definitions )*
+            UnknownDiscriminant,
+        }
+
+        impl CapnpPlainStruct for #name {
+            fn try_from_reader(reader: StructReader) -> Result<Self> {
+                let value = match reader.read_u16(0, 0) {
+                    #(#arms )*
+                    _ => Self::UnknownDiscriminant,
+                };
+                Ok(value)
+            }
         }
     };
     declaration
 }
 
 fn generate_node_struct(name: &str, node_struct: &Node__Struct) -> TokenStream {
-    if node_struct.discriminant_count == 0 {
-        return generate_common_struct(format_ident!("{}", name), &node_struct.fields);
+    let total = format_ident!("{}", name);
+    let (common_fields, variant_fields) = node_struct
+        .fields
+        .iter()
+        .partition::<Vec<_>, _>(|f| f.0.discriminant_value == 0xffff);
+    let variant_fields: BTreeMap<_, _> = variant_fields
+        .into_iter()
+        .map(|f| (f.0.discriminant_value, f))
+        .collect();
+    if variant_fields.is_empty() {
+        generate_common_struct(&total, &common_fields)
+    } else if common_fields.is_empty() {
+        generate_variant_struct(&total, &variant_fields)
+    } else {
+        let common_name = format_ident!("{}_0", name);
+        let common = generate_common_struct(&common_name, &common_fields);
+        let variant_name = format_ident!("{}_1", name);
+        let variant = generate_variant_struct(&variant_name, &variant_fields);
+        quote! {
+            #common
+            #variant
+            #[derive(Debug, PartialEq, Eq)]
+            pub struct #total(pub #common_name, pub #variant_name);
+        }
     }
-    let common_name = format_ident!("{}_common", name);
-    let common = generate_common_struct(common_name, &node_struct.fields);
-    let variants_name = format_ident!("{}_variants", name);
-    let variants = generate_union_struct(
-        variants_name,
-        &node_struct.fields,
-        node_struct.discriminant_count,
-    );
-    quote! { #common #variants}
 }
 
 pub fn generate_code(code_generator_request: &CodeGeneratorRequest) -> TokenStream {
