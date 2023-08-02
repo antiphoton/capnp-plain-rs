@@ -16,9 +16,9 @@ jobs:
         with:
           command: fmt
           args: -- --check
-        working-directory: crates
+        working-directory: ./crates
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
           args: --all-features -- -D warnings
-        working-directory: crates
+        working-directory: ./crates
