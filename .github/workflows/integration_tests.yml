@@ -1,0 +1,27 @@
+name: Integration Tests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+      - uses: actions/setup-node@v3
+      - uses: ./.github/actions/cache-cargo
+      - uses: ./.github/actions/build-capnp
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Check self-hosting
+        working-directory: crates/capnpc-plain/src/schema
+        run: |
+          cp schema_capnp.rs schema_capnp_main.rs
+          sh build.sh
+          diff schema_capnp_main.rs schema_capnp.rs
