@@ -1,5 +1,5 @@
 name: Build Capnproto
-description: "Build Capnproto from submodule source code"
+description: "Build Capnproto from submodule source code."
 runs:
   using: "composite"
   steps:
