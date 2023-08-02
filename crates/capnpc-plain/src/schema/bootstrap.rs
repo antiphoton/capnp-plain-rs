@@ -3,7 +3,7 @@
 use anyhow::Result;
 use capnp_plain::pointer::struct_pointer::{CapnpPlainStruct, StructReader};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 pub enum Type {
     Void,
     Uint16,

@@ -50,7 +50,7 @@ fn generate_common_struct(name: &Ident, fields: &[&Field]) -> TokenStream {
         })
         .collect();
     let delcaration = quote! {
-        #[derive(Debug, PartialEq, Eq)]
+        #[derive(Debug, PartialEq)]
         pub struct #name {
             #(#fields )*
         }
@@ -96,7 +96,7 @@ fn generate_variant_struct(name: &Ident, fields: &BTreeMap<u16, &Field>) -> Toke
         .collect();
     let name = format_ident!("{}", name);
     let declaration = quote! {
-        #[derive(Debug, PartialEq, Eq)]
+        #[derive(Debug, PartialEq)]
         pub enum #name {
             #(#definitions )*
             UnknownDiscriminant,
@@ -137,7 +137,7 @@ fn generate_node_struct(name: &str, node_struct: &Node__Struct) -> TokenStream {
         quote! {
             #common
             #variant
-            #[derive(Debug, PartialEq, Eq)]
+            #[derive(Debug, PartialEq)]
             pub struct #total(pub #common_name, pub #variant_name);
         }
     }
