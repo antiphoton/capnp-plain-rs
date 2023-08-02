@@ -5,6 +5,7 @@ runs:
   steps:
     - name: Get capnp commit SHA
       id: get-capnp-sha
+      shell: bash
       run: |
         capnp_sha=$(git -C third_party/capnproto/ rev-parse HEAD)
         echo "CAPNP_COMMIT_SHA=$capnp_sha" >> "$GITHUB_OUTPUT"
@@ -17,7 +18,9 @@ runs:
         key: ${{ runner.os }}-bazel-${{ steps.get-capnp-sha.outputs.CAPNP_COMMIT_SHA }}
         restore-keys: ${{ runner.os }}-bazel-
     - name: Install bazel
+      shell: bash
       run: npm install -g @bazel/bazelisk
     - name: Build capnp
+      shell: bash
       working-directory: third_party/capnproto/c++/src/capnp
       run: bazelisk build :capnp_tool
