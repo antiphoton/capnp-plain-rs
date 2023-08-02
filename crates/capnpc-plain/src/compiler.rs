@@ -24,6 +24,7 @@ pub fn write_rust_code(code_generator_request: &CodeGeneratorRequest) -> Result<
     let tokens: TokenStream = tokens.into_iter().collect();
     let output = quote! {
         //! @generated
+        #![allow(clippy::all)]
         #![allow(dead_code)]
         #![allow(non_camel_case_types)]
         use anyhow::Result;

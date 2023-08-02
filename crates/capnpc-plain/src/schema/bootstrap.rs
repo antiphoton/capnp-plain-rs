@@ -3,25 +3,7 @@
 use anyhow::Result;
 use capnp_plain::pointer::struct_pointer::{CapnpPlainStruct, StructReader};
 
-#[derive(Debug, PartialEq)]
-pub enum Type {
-    Void,
-    Uint16,
-    Uint32,
-    Unknown,
-}
-
-impl CapnpPlainStruct for Type {
-    fn try_from_reader(reader: StructReader) -> Result<Self> {
-        let value = match reader.read_u16(0, 0) {
-            0 => Self::Void,
-            7 => Self::Uint16,
-            8 => Self::Uint32,
-            _ => Self::Unknown,
-        };
-        Ok(value)
-    }
-}
+use super::Type;
 
 #[derive(Debug)]
 pub struct Field__Slot {

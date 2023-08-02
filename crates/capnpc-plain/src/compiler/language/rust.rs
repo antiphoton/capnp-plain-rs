@@ -22,14 +22,27 @@ fn field_ident(s: &str) -> Ident {
     }
 }
 
-fn get_primitive(t: &Type) -> Option<TokenStream> {
-    let t = match t {
-        Type::Void => quote!(()),
-        Type::Uint16 => quote! {u16},
-        Type::Uint32 => quote! {u32},
-        _ => return None,
-    };
-    Some(t)
+impl Type {
+    fn get_rust_primitive(&self) -> Option<TokenStream> {
+        let t = match self {
+            Self::Void => quote!(()),
+            Self::Bool => quote!(bool),
+            Self::Int8 => quote!(i8),
+            Self::Int16 => quote!(i16),
+            Self::Int32 => quote!(i32),
+            Self::Int64 => quote!(i64),
+            Self::Uint8 => quote!(u8),
+            Self::Uint16 => quote!(u16),
+            Self::Uint32 => quote!(u32),
+            Self::Uint64 => quote!(u64),
+            Self::Float32 => quote!(f32),
+            Self::Float64 => quote!(f64),
+            Self::Text => quote!(String),
+            Self::Data => quote!(Vec<u8>),
+            _ => return None,
+        };
+        Some(t)
+    }
 }
 
 fn generate_common_struct(name: &Ident, fields: &[&Field]) -> TokenStream {
@@ -43,7 +56,7 @@ fn generate_common_struct(name: &Ident, fields: &[&Field]) -> TokenStream {
             let Some(Field_Union::Slot(slot) )= &field.1 else {
                 return None
             };
-            let ty = get_primitive(&slot.r#type)?;
+            let ty = &slot.r#type.get_rust_primitive()?;
             Some(quote! {
                 pub #name: #ty,
             })
@@ -72,7 +85,7 @@ fn generate_variant_struct(name: &Ident, fields: &BTreeMap<u16, &Field>) -> Toke
                     pub #name,
                 })
             } else {
-                let ty = get_primitive(&slot.r#type);
+                let ty = &slot.r#type.get_rust_primitive()?;
                 Some(quote! { #name ( #ty ), })
             }
         })
