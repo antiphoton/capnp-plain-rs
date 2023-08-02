@@ -22,7 +22,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: Check self-hosting
+      - name: Check self-hosting
         working-directory: crates/capnpc-plain/src/schema
         run: |
           cp schema_capnp.rs schem_capnp_main.rs
