@@ -1,0 +1,29 @@
+use std::collections::HashMap;
+
+use crate::schema::{CodeGeneratorRequest, Node};
+
+pub struct CompilerContext<'a> {
+    pub node_map: HashMap<u64, &'a Node>,
+}
+
+impl<'a> CompilerContext<'a> {
+    pub fn new(code_generator_request: &'a CodeGeneratorRequest) -> Self {
+        let CodeGeneratorRequest { nodes, .. } = code_generator_request;
+        let node_map = nodes.iter().map(|node| (node.0.id, node)).collect();
+        CompilerContext { node_map }
+    }
+    fn get_name_segments<'b>(&'b self, node: &'b Node) -> Vec<&'b str> {
+        let s = &node.0.display_name[(node.0.display_name_prefix_length as usize)..];
+        if let Some(p) = self.node_map.get(&node.0.scope_id) {
+            let mut a = self.get_name_segments(p);
+            a.push(s);
+            a
+        } else {
+            vec![s]
+        }
+    }
+    pub fn get_full_name(&self, node: &Node) -> String {
+        let a = self.get_name_segments(node);
+        a[1..].join("__")
+    }
+}

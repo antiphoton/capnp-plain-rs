@@ -3,19 +3,21 @@
 use anyhow::Result;
 use capnp_plain::pointer::struct_pointer::{CapnpPlainStruct, StructReader};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Type {
     Void,
     Uint16,
     Uint32,
+    Unknown,
 }
 
 impl CapnpPlainStruct for Type {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = match reader.read_u16(0, 0) {
+            0 => Self::Void,
             7 => Self::Uint16,
             8 => Self::Uint32,
-            _ => Self::Void,
+            _ => Self::Unknown,
         };
         Ok(value)
     }
@@ -38,6 +40,7 @@ impl CapnpPlainStruct for Field__Slot {
 #[derive(Debug)]
 pub struct Field_Common {
     pub name: String,
+    pub discriminant_value: u16,
 }
 
 #[derive(Debug)]
@@ -52,10 +55,14 @@ impl CapnpPlainStruct for Field {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let common = Field_Common {
             name: reader.read_pointer(0)?.into_list_reader()?.read_text()?,
+            discriminant_value: reader.read_u16(1, 65535),
         };
         let tag = reader.read_u16(4, 0);
         let union = match tag {
-            0 => Some(Field_Union::Slot(Field__Slot::try_from_reader(reader)?)),
+            0 => Some(Field_Union::Slot(Field__Slot {
+                offset: reader.read_u32(1, 0),
+                r#type: Type::try_from_reader(reader.read_pointer(2)?.into_struct_reader()?)?,
+            })),
             _ => None,
         };
         Ok(Field(common, union))
@@ -63,16 +70,7 @@ impl CapnpPlainStruct for Field {
 }
 
 #[derive(Debug)]
-pub struct Node_Common {
-    pub id: u64,
-    pub display_name: String,
-    pub display_name_prefix_length: u32,
-}
-
-#[derive(Debug)]
 pub struct Node__Struct {
-    pub data_word_count: u16,
-    pub pointer_count: u16,
     pub discriminant_count: u16,
     pub discriminant_offset: u32,
     pub fields: Vec<Field>,
@@ -80,9 +78,7 @@ pub struct Node__Struct {
 
 impl CapnpPlainStruct for Node__Struct {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
-        Ok(Node__Struct {
-            data_word_count: reader.read_u16(7, 0),
-            pointer_count: reader.read_u16(12, 0),
+        Ok(Self {
             discriminant_count: reader.read_u16(15, 0),
             discriminant_offset: reader.read_u32(8, 0),
             fields: reader
@@ -91,6 +87,14 @@ impl CapnpPlainStruct for Node__Struct {
                 .read_struct_children()?,
         })
     }
+}
+
+#[derive(Debug)]
+pub struct Node_Common {
+    pub id: u64,
+    pub display_name: String,
+    pub display_name_prefix_length: u32,
+    pub scope_id: u64,
 }
 
 #[derive(Debug)]
@@ -107,6 +111,7 @@ impl CapnpPlainStruct for Node {
             id: reader.read_u64(0, 0),
             display_name: reader.read_pointer(0)?.into_list_reader()?.read_text()?,
             display_name_prefix_length: reader.read_u32(2, 0),
+            scope_id: reader.read_u64(2, 0),
         };
         let tag = reader.read_u16(6, 0);
         let union = match tag {
