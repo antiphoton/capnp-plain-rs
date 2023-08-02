@@ -14,9 +14,6 @@ jobs:
         with:
           submodules: "recursive"
       - uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-          cache: "npm"
       - uses: ./.github/actions/cache-cargo
       - uses: ./.github/actions/build-capnp
       - uses: actions-rs/toolchain@v1
