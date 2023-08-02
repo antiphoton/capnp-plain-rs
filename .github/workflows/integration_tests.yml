@@ -22,6 +22,6 @@ jobs:
       - name: Check self-hosting
         working-directory: crates/capnpc-plain/src/schema
         run: |
-          cp schema_capnp.rs schem_capnp_main.rs
+          cp schema_capnp.rs schema_capnp_main.rs
           sh build.sh
-          diff schema_capnp_main.rs schema.rs
+          diff schema_capnp_main.rs schema_capnp.rs
