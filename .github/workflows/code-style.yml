@@ -12,13 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/cache-cargo
-      - uses: actions-rs/cargo@v1
+      - uses: actions-rs/toolchain@v1
         with:
-          command: fmt
-          args: -- --check
-        working-directory: ./crates
-      - uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --all-features -- -D warnings
-        working-directory: ./crates
+            components: rustfmt, clippy
+      - run: cargo fmt -- --check
+        working-directory: crates
+      - run: cargo clippy -- -D warnings
+        working-directory: crates
