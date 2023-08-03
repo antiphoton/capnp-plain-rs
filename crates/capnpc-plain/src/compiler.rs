@@ -27,6 +27,7 @@ pub fn write_rust_code(code_generator_request: &CodeGeneratorRequest) -> Result<
         #![allow(clippy::all)]
         #![allow(dead_code)]
         #![allow(non_camel_case_types)]
+        #![allow(unused)]
         use anyhow::Result;
         use capnp_plain::pointer::struct_pointer::{CapnpPlainStruct, StructReader};
         #tokens

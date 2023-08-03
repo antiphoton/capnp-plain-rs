@@ -44,6 +44,7 @@ impl TryFrom<Word> for StructPointer {
     }
 }
 
+#[derive(Clone)]
 pub struct StructReader<'a> {
     data: WordSlice<'a>,
     pointers: WordSlice<'a>,

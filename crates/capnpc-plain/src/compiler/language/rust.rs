@@ -8,7 +8,7 @@ use quote::{format_ident, quote};
 
 use crate::{
     compiler::context::CompilerContext,
-    schema::{CodeGeneratorRequest, Field, Field_Union, Node_Union, Node__Struct, Type},
+    schema::{CodeGeneratorRequest, Field, Field_Union, Node_Union, Node__Struct, Type, Value},
 };
 
 use self::keyword::is_keyword;
@@ -43,10 +43,30 @@ impl Type {
         };
         Some(t)
     }
+    fn get_rust_parser(&self, offset: u32, default_value: &Value) -> Option<TokenStream> {
+        let reader = format_ident!("reader");
+        let t = match (self, default_value) {
+            (Self::Void, _) => quote!(()),
+            (Self::Bool, _) => quote!(#reader.read_bool(#offset, false)),
+            (Self::Int8, _) => quote!(#reader.read_i8(#offset, 0)),
+            (Self::Int16, _) => quote!(#reader.read_i16(#offset, 0)),
+            (Self::Int32, _) => quote!(#reader.read_i32(#offset, 0)),
+            (Self::Int64, _) => quote!(#reader.read_i64(#offset, 0)),
+            (Self::Uint8, _) => quote!(#reader.read_u8(#offset, 0)),
+            (Self::Uint16, _) => quote!(#reader.read_u16(#offset, 0)),
+            (Self::Uint32, _) => quote!(#reader.read_u32(#offset, 0)),
+            (Self::Uint64, _) => quote!(#reader.read_u64(#offset, 0)),
+            (Self::Text, _) => {
+                quote!(#reader.read_pointer(#offset)?.into_list_reader()?.read_text()?)
+            }
+            _ => return None,
+        };
+        Some(t)
+    }
 }
 
 fn generate_common_struct(name: &Ident, fields: &[&Field]) -> TokenStream {
-    let fields: Vec<_> = fields
+    let definitions: Vec<_> = fields
         .iter()
         .filter_map(|field| {
             if field.0.discriminant_value != 0xffff {
@@ -62,10 +82,34 @@ fn generate_common_struct(name: &Ident, fields: &[&Field]) -> TokenStream {
             })
         })
         .collect();
+    let parsers: Vec<_> = fields
+        .iter()
+        .filter_map(|field| {
+            if field.0.discriminant_value != 0xffff {
+                return None;
+            }
+            let name = field_ident(&field.0.name);
+            let Some(Field_Union::Slot(slot))= &field.1 else {
+                return None
+            };
+            let p = &slot.r#type.get_rust_parser(slot.offset, &Value::Void)?;
+            Some(quote! {
+                #name: #p,
+            })
+        })
+        .collect();
     let delcaration = quote! {
         #[derive(Debug, PartialEq)]
         pub struct #name {
-            #(#fields )*
+            #(#definitions)*
+        }
+        impl CapnpPlainStruct for #name {
+            fn try_from_reader(reader: StructReader) -> Result<Self> {
+                let value = #name {
+                    #(#parsers)*
+                };
+                Ok(value)
+            }
         }
     };
     delcaration
@@ -99,26 +143,30 @@ fn generate_variant_struct(name: &Ident, fields: &BTreeMap<u16, &Field>) -> Toke
             let name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
             let ty = &slot.r#type;
             if ty == &Type::Void {
-                Some(quote! {
-                    #i => Self:: #name ,
-                })
-            } else {
-                None
-            }
+                return Some(quote! {
+                    #i => Self::#name,
+                });
+            };
+            let Some(p) = ty.get_rust_parser(slot.offset, &Value::Void) else {
+                return None;
+            };
+            Some(quote! {
+                #i => Self::#name(#p),
+            })
         })
         .collect();
     let name = format_ident!("{}", name);
     let declaration = quote! {
         #[derive(Debug, PartialEq)]
         pub enum #name {
-            #(#definitions )*
+            #(#definitions)*
             UnknownDiscriminant,
         }
 
         impl CapnpPlainStruct for #name {
             fn try_from_reader(reader: StructReader) -> Result<Self> {
                 let value = match reader.read_u16(0, 0) {
-                    #(#arms )*
+                    #(#arms)*
                     _ => Self::UnknownDiscriminant,
                 };
                 Ok(value)
@@ -150,8 +198,18 @@ fn generate_node_struct(name: &str, node_struct: &Node__Struct) -> TokenStream {
         quote! {
             #common
             #variant
+
             #[derive(Debug, PartialEq)]
             pub struct #total(pub #common_name, pub #variant_name);
+
+            impl CapnpPlainStruct for #total {
+                fn try_from_reader(reader: StructReader) -> Result<Self> {
+                    Ok(#total(
+                        #common_name::try_from_reader(reader.clone())?,
+                        #variant_name::try_from_reader(reader)?,
+                    ))
+                }
+            }
         }
     }
 }
