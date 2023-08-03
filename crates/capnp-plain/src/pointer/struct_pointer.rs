@@ -68,6 +68,10 @@ impl<'a> StructReader<'a> {
         };
         Reader::new(x)
     }
+    pub fn read_struct_child<T: CapnpPlainStruct>(&self, offset: u32) -> Result<T> {
+        let reader = self.read_pointer(offset)?.into_struct_reader()?;
+        T::try_from_reader(reader)
+    }
 }
 
 pub trait CapnpPlainStruct: Sized {

@@ -81,7 +81,7 @@ impl Type {
                 };
                 let name = context.get_full_name(node);
                 let name = format_ident!("{}", name);
-                quote!(#name::try_from_reader(#reader.read_pointer(#offset)?.into_struct_reader()?)?)
+                quote!(#reader.read_struct_child::<#name>(#offset))
             }
             _ => return None,
         };
@@ -139,7 +139,7 @@ fn generate_common_struct(
                         .rust_parser(context, slot.offset, &Value::Void)?;
                     if slot.r#type.rust_boxed() {
                         Some(quote! {
-                            #name: Some(Box::new(#p)),
+                            #name: #p.ok().map(Box::new),
                         })
                     } else {
                         Some(quote! {
@@ -220,9 +220,15 @@ fn generate_variant_struct(
                     let Some(p) = ty.rust_parser(context, slot.offset, &Value::Void) else {
                         return None;
                     };
-                    Some(quote! {
-                        #i => Self::#field_name(#p),
-                    })
+                    if ty.rust_boxed() {
+                        Some(quote! {
+                            #i => Self::#field_name(#p?),
+                        })
+                    } else {
+                        Some(quote! {
+                            #i => Self::#field_name(#p),
+                        })
+                    }
                 }
                 Some(Field_Union::Group(group)) => {
                     let node = context.get_node(group.type_id)?;

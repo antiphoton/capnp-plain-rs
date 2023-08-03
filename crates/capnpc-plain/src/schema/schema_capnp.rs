@@ -165,20 +165,8 @@ impl CapnpPlainStruct for Method {
             code_order: reader.read_u16(0u32, 0),
             param_struct_type: reader.read_u64(1u32, 0),
             result_struct_type: reader.read_u64(2u32, 0),
-            param_brand: Some(
-                Box::new(
-                    Brand::try_from_reader(
-                        reader.read_pointer(2u32)?.into_struct_reader()?,
-                    )?,
-                ),
-            ),
-            result_brand: Some(
-                Box::new(
-                    Brand::try_from_reader(
-                        reader.read_pointer(3u32)?.into_struct_reader()?,
-                    )?,
-                ),
-            ),
+            param_brand: reader.read_struct_child::<Brand>(2u32).ok().map(Box::new),
+            result_brand: reader.read_struct_child::<Brand>(3u32).ok().map(Box::new),
         };
         Ok(value)
     }
@@ -192,13 +180,7 @@ impl CapnpPlainStruct for Superclass {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Superclass {
             id: reader.read_u64(0u32, 0),
-            brand: Some(
-                Box::new(
-                    Brand::try_from_reader(
-                        reader.read_pointer(0u32)?.into_struct_reader()?,
-                    )?,
-                ),
-            ),
+            brand: reader.read_struct_child::<Brand>(0u32).ok().map(Box::new),
         };
         Ok(value)
     }
@@ -312,20 +294,8 @@ pub struct Node__Const {
 impl CapnpPlainStruct for Node__Const {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Node__Const {
-            r#type: Some(
-                Box::new(
-                    Type::try_from_reader(
-                        reader.read_pointer(3u32)?.into_struct_reader()?,
-                    )?,
-                ),
-            ),
-            value: Some(
-                Box::new(
-                    Value::try_from_reader(
-                        reader.read_pointer(4u32)?.into_struct_reader()?,
-                    )?,
-                ),
-            ),
+            r#type: reader.read_struct_child::<Type>(3u32).ok().map(Box::new),
+            value: reader.read_struct_child::<Value>(4u32).ok().map(Box::new),
         };
         Ok(value)
     }
@@ -349,13 +319,7 @@ pub struct Node__Annotation {
 impl CapnpPlainStruct for Node__Annotation {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Node__Annotation {
-            r#type: Some(
-                Box::new(
-                    Type::try_from_reader(
-                        reader.read_pointer(3u32)?.into_struct_reader()?,
-                    )?,
-                ),
-            ),
+            r#type: reader.read_struct_child::<Type>(3u32).ok().map(Box::new),
             targets_file: reader.read_bool(112u32, false),
             targets_const: reader.read_bool(113u32, false),
             targets_enum: reader.read_bool(114u32, false),
@@ -396,20 +360,8 @@ impl CapnpPlainStruct for Annotation {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Annotation {
             id: reader.read_u64(0u32, 0),
-            value: Some(
-                Box::new(
-                    Value::try_from_reader(
-                        reader.read_pointer(0u32)?.into_struct_reader()?,
-                    )?,
-                ),
-            ),
-            brand: Some(
-                Box::new(
-                    Brand::try_from_reader(
-                        reader.read_pointer(1u32)?.into_struct_reader()?,
-                    )?,
-                ),
-            ),
+            value: reader.read_struct_child::<Value>(0u32).ok().map(Box::new),
+            brand: reader.read_struct_child::<Brand>(1u32).ok().map(Box::new),
         };
         Ok(value)
     }
@@ -482,13 +434,7 @@ impl CapnpPlainStruct for Brand__Binding {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = match reader.read_u16(0, 0) {
             0u16 => Self::Unbound,
-            1u16 => {
-                Self::Type(
-                    Type::try_from_reader(
-                        reader.read_pointer(0u32)?.into_struct_reader()?,
-                    )?,
-                )
-            }
+            1u16 => Self::Type(reader.read_struct_child::<Type>(0u32)?),
             _ => Self::UnknownDiscriminant,
         };
         Ok(value)
@@ -501,13 +447,7 @@ pub struct Type__List {
 impl CapnpPlainStruct for Type__List {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Type__List {
-            element_type: Some(
-                Box::new(
-                    Type::try_from_reader(
-                        reader.read_pointer(0u32)?.into_struct_reader()?,
-                    )?,
-                ),
-            ),
+            element_type: reader.read_struct_child::<Type>(0u32).ok().map(Box::new),
         };
         Ok(value)
     }
@@ -521,13 +461,7 @@ impl CapnpPlainStruct for Type__Enum {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Type__Enum {
             type_id: reader.read_u64(1u32, 0),
-            brand: Some(
-                Box::new(
-                    Brand::try_from_reader(
-                        reader.read_pointer(0u32)?.into_struct_reader()?,
-                    )?,
-                ),
-            ),
+            brand: reader.read_struct_child::<Brand>(0u32).ok().map(Box::new),
         };
         Ok(value)
     }
@@ -541,13 +475,7 @@ impl CapnpPlainStruct for Type__Struct {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Type__Struct {
             type_id: reader.read_u64(1u32, 0),
-            brand: Some(
-                Box::new(
-                    Brand::try_from_reader(
-                        reader.read_pointer(0u32)?.into_struct_reader()?,
-                    )?,
-                ),
-            ),
+            brand: reader.read_struct_child::<Brand>(0u32).ok().map(Box::new),
         };
         Ok(value)
     }
@@ -561,13 +489,7 @@ impl CapnpPlainStruct for Type__Interface {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Type__Interface {
             type_id: reader.read_u64(1u32, 0),
-            brand: Some(
-                Box::new(
-                    Brand::try_from_reader(
-                        reader.read_pointer(0u32)?.into_struct_reader()?,
-                    )?,
-                ),
-            ),
+            brand: reader.read_struct_child::<Brand>(0u32).ok().map(Box::new),
         };
         Ok(value)
     }
@@ -657,20 +579,8 @@ impl CapnpPlainStruct for Field__Slot {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Field__Slot {
             offset: reader.read_u32(1u32, 0),
-            r#type: Some(
-                Box::new(
-                    Type::try_from_reader(
-                        reader.read_pointer(2u32)?.into_struct_reader()?,
-                    )?,
-                ),
-            ),
-            default_value: Some(
-                Box::new(
-                    Value::try_from_reader(
-                        reader.read_pointer(3u32)?.into_struct_reader()?,
-                    )?,
-                ),
-            ),
+            r#type: reader.read_struct_child::<Type>(2u32).ok().map(Box::new),
+            default_value: reader.read_struct_child::<Value>(3u32).ok().map(Box::new),
             had_explicit_default: reader.read_bool(128u32, false),
         };
         Ok(value)
@@ -767,13 +677,10 @@ pub struct CodeGeneratorRequest {
 impl CapnpPlainStruct for CodeGeneratorRequest {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = CodeGeneratorRequest {
-            capnp_version: Some(
-                Box::new(
-                    CapnpVersion::try_from_reader(
-                        reader.read_pointer(2u32)?.into_struct_reader()?,
-                    )?,
-                ),
-            ),
+            capnp_version: reader
+                .read_struct_child::<CapnpVersion>(2u32)
+                .ok()
+                .map(Box::new),
         };
         Ok(value)
     }
