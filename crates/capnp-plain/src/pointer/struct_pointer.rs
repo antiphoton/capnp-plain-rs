@@ -61,8 +61,8 @@ impl<'a> StructReader<'a> {
         let reader = StructReader { data, pointers };
         Ok(reader)
     }
-    pub fn read_pointer(&self, offset: usize) -> Result<Reader<'_>> {
-        let Some(x) = self.pointers.get(offset) else {
+    pub fn read_pointer(&self, offset: u32) -> Result<Reader<'_>> {
+        let Some(x) = self.pointers.get(offset as usize) else {
             todo!()
         };
         Reader::new(x)
