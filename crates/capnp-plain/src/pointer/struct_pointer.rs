@@ -63,10 +63,15 @@ impl<'a> StructReader<'a> {
         Ok(reader)
     }
     pub fn read_pointer(&self, offset: u32) -> Result<Reader<'_>> {
-        let Some(x) = self.pointers.get(offset as usize) else {
-            todo!()
-        };
+        let x = self
+            .pointers
+            .get(offset as usize)
+            .ok_or_else(|| Error::msg("out of bound"))?;
         Reader::new(x)
+    }
+    pub fn read_struct_child<T: CapnpPlainStruct>(&self, offset: u32) -> Result<T> {
+        let reader = self.read_pointer(offset)?.into_struct_reader()?;
+        T::try_from_reader(reader)
     }
 }
 
