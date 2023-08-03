@@ -54,6 +54,20 @@ macro_rules! define_big_reader {
     };
 }
 
+impl<'a> StructReader<'a> {
+    pub fn read_bool(&self, offset: usize, default_value: bool) -> bool {
+        let i = offset / 64;
+        let Some(word) = self.data.get(i)  else {
+            return default_value;
+        };
+        let j = (offset % 64) / 8;
+        let k = offset % 8;
+        let byte = word.0[j];
+        let bit = (byte >> k) % 2 == 1;
+        bit ^ default_value
+    }
+}
+
 define_byte_reader!(read_i8, i8);
 define_byte_reader!(read_u8, u8);
 
