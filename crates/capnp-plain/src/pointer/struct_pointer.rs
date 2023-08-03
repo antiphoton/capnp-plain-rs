@@ -20,7 +20,7 @@ use crate::{
     pointer::get_offset_bits,
 };
 
-use super::Reader;
+use super::{list_pointer::ListReader, Reader};
 
 #[derive(Clone)]
 pub struct StructPointer {
@@ -72,6 +72,27 @@ impl<'a> StructReader<'a> {
     pub fn read_struct_child<T: CapnpPlainStruct>(&self, offset: u32) -> Result<T> {
         let reader = self.read_pointer(offset)?.into_struct_reader()?;
         T::try_from_reader(reader)
+    }
+    pub fn read_text_field(&self, offset: u32) -> String {
+        let mut bytes = self.read_list_field(offset, |r| r.read_u8_children());
+        let terminator = bytes.pop();
+        if terminator != Some(0) {
+            return "".to_string();
+        }
+        String::from_utf8(bytes).unwrap_or_default()
+    }
+    pub fn read_list_field<T>(
+        &self,
+        offset: u32,
+        f: impl FnOnce(ListReader) -> Result<Vec<T>>,
+    ) -> Vec<T> {
+        let Ok(p) = self.read_pointer(offset) else {
+            return Vec::with_capacity(0);
+        };
+        let Ok(p) = p.into_list_reader() else {
+            return Vec::with_capacity(0);
+        };
+        f(p).unwrap_or_else(|_| Vec::with_capacity(0))
     }
 }
 

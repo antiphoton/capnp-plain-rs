@@ -64,22 +64,18 @@ fn define_type(context: &CompilerContext, ty: &Type, is_box: bool) -> Option<Tok
     Some(r)
 }
 
-fn read_list(context: &CompilerContext, offset: u32, ty: &Type) -> Option<TokenStream> {
-    let reader = format_ident!("reader");
-    let reader = quote!(#reader.read_pointer(#offset)?.into_list_reader()?);
-    let r = match ty {
-        Type::Bool => quote!(#reader.read_bool_children()?),
-        Type::Int8 => quote!(#reader.read_i8_children()?),
-        Type::Uint8 => quote!(#reader.read_u8_children()?),
-        Type::Struct(type_struct) => {
-            let Some(node) = context.get_node(type_struct.type_id) else {
-                return None;
-            };
-            let name = format_ident!("{}", context.get_full_name(node));
-            quote!(#reader.read_struct_children::<#name>()?)
+fn read_list(_context: &CompilerContext, offset: u32, ty: &Type) -> Option<TokenStream> {
+    let callback = match ty {
+        Type::Bool => quote!(|r| r.read_bool_children()),
+        Type::Int8 => quote!(|r| r.read_i8_children()),
+        Type::Uint8 => quote!(|r| r.read_u8_children()),
+        Type::Struct(_) => {
+            quote!(|r| r.read_struct_children())
         }
         _ => return None,
     };
+    let reader = format_ident!("reader");
+    let r = quote!(#reader.read_list_field(#offset, #callback));
     Some(r)
 }
 
@@ -111,7 +107,7 @@ fn read_slot(context: &CompilerContext, slot: &Field__Slot, is_box: bool) -> Opt
         (Type::Uint64, Value::Uint64(x)) => quote!(#reader.read_u64(#offset, #x)),
         (Type::Uint64, _) => quote!(#reader.read_u64(#offset, 0)),
         (Type::Text, _) => {
-            quote!(#reader.read_pointer(#offset)?.into_list_reader()?.read_text()?)
+            quote!(#reader.read_text_field(#offset))
         }
         (Type::Struct(type_struct), _) => {
             let Some(node) = context.get_node(type_struct.type_id) else {

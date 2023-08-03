@@ -23,7 +23,7 @@ pub struct Field(pub Field_Common, pub Option<Field_Union>);
 impl CapnpPlainStruct for Field {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let common = Field_Common {
-            name: reader.read_pointer(0)?.into_list_reader()?.read_text()?,
+            name: reader.read_text_field(0),
             discriminant_value: reader.read_u16(1, 65535),
         };
         let tag = reader.read_u16(4, 0);
@@ -76,7 +76,7 @@ impl CapnpPlainStruct for Node {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let common = Node_Common {
             id: reader.read_u64(0, 0),
-            display_name: reader.read_pointer(0)?.into_list_reader()?.read_text()?,
+            display_name: reader.read_text_field(0),
             display_name_prefix_length: reader.read_u32(2, 0),
             scope_id: reader.read_u64(2, 0),
         };
@@ -97,7 +97,7 @@ pub struct CodeGeneratorRequest__RequestedFile {
 impl CapnpPlainStruct for CodeGeneratorRequest__RequestedFile {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         Ok(Self {
-            filename: reader.read_pointer(0)?.into_list_reader()?.read_text()?,
+            filename: reader.read_text_field(0),
         })
     }
 }
