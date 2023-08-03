@@ -8,7 +8,10 @@ use quote::{format_ident, quote};
 
 use crate::{
     compiler::context::CompilerContext,
-    schema::{CodeGeneratorRequest, Field, Field_Union, Node_Union, Node__Struct, Type, Value},
+    schema::{
+        CodeGeneratorRequest, Field, Field_Union, Field__Slot, Node_Union, Node__Struct, Type,
+        Value,
+    },
 };
 
 use self::keyword::is_keyword;
@@ -22,84 +25,115 @@ fn field_ident(s: &str) -> Ident {
     }
 }
 
-impl Type {
-    fn rust_boxed(&self) -> bool {
-        matches!(self, Self::Struct(_))
-    }
-    fn rust_declaration(&self, context: &CompilerContext) -> Option<TokenStream> {
-        let t = match self {
-            Self::Void => quote!(()),
-            Self::Bool => quote!(bool),
-            Self::Int8 => quote!(i8),
-            Self::Int16 => quote!(i16),
-            Self::Int32 => quote!(i32),
-            Self::Int64 => quote!(i64),
-            Self::Uint8 => quote!(u8),
-            Self::Uint16 => quote!(u16),
-            Self::Uint32 => quote!(u32),
-            Self::Uint64 => quote!(u64),
-            Self::Float32 => quote!(f32),
-            Self::Float64 => quote!(f64),
-            Self::Text => quote!(String),
-            Self::Data => quote!(Vec<u8>),
-            Self::Struct(type_struct) => {
-                let Some(node) = context.get_node(type_struct.type_id) else {
-                    return None;
-                };
-                let name = context.get_full_name(node);
-                let name = format_ident!("{}", name);
+fn define_type(context: &CompilerContext, ty: &Type, is_box: bool) -> Option<TokenStream> {
+    let r = match ty {
+        Type::Void => quote!(()),
+        Type::Bool => quote!(bool),
+        Type::Int8 => quote!(i8),
+        Type::Int16 => quote!(i16),
+        Type::Int32 => quote!(i32),
+        Type::Int64 => quote!(i64),
+        Type::Uint8 => quote!(u8),
+        Type::Uint16 => quote!(u16),
+        Type::Uint32 => quote!(u32),
+        Type::Uint64 => quote!(u64),
+        Type::Float32 => quote!(f32),
+        Type::Float64 => quote!(f64),
+        Type::Text => quote!(String),
+        Type::Data => quote!(Vec<u8>),
+        Type::Struct(type_struct) => {
+            let Some(node) = context.get_node(type_struct.type_id) else {
+                return None;
+            };
+            let name = format_ident!("{}", context.get_full_name(node));
+            if is_box {
+                quote!(Option<Box<#name>>)
+            } else {
                 quote!(#name)
             }
-            _ => return None,
-        };
-        Some(t)
-    }
-    fn rust_parser(
-        &self,
-        context: &CompilerContext,
-        offset: u32,
-        default_value: &Option<Box<Value>>,
-    ) -> Option<TokenStream> {
-        let default_value = match default_value {
-            Some(x) => x.as_ref(),
-            None => &Value::Void,
-        };
-        let reader = format_ident!("reader");
-        let t = match (self, default_value) {
-            (Self::Void, _) => quote!(()),
-            (Self::Bool, Value::Bool(x)) => quote!(#reader.read_bool(#offset, #x)),
-            (Self::Bool, _) => quote!(#reader.read_bool(#offset, false)),
-            (Self::Int8, Value::Int8(x)) => quote!(#reader.read_i8(#offset, #x)),
-            (Self::Int8, _) => quote!(#reader.read_i8(#offset, 0)),
-            (Self::Int16, Value::Int16(x)) => quote!(#reader.read_i16(#offset, #x)),
-            (Self::Int16, _) => quote!(#reader.read_i16(#offset, 0)),
-            (Self::Int32, Value::Int32(x)) => quote!(#reader.read_i32(#offset, #x)),
-            (Self::Int32, _) => quote!(#reader.read_i32(#offset, 0)),
-            (Self::Int64, Value::Int64(x)) => quote!(#reader.read_i64(#offset, #x)),
-            (Self::Int64, _) => quote!(#reader.read_i64(#offset, 0)),
-            (Self::Uint8, Value::Uint8(x)) => quote!(#reader.read_u8(#offset, #x)),
-            (Self::Uint8, _) => quote!(#reader.read_u8(#offset, 0)),
-            (Self::Uint16, Value::Uint16(x)) => quote!(#reader.read_u16(#offset, #x)),
-            (Self::Uint16, _) => quote!(#reader.read_u16(#offset, 0)),
-            (Self::Uint32, Value::Uint32(x)) => quote!(#reader.read_u32(#offset, #x)),
-            (Self::Uint32, _) => quote!(#reader.read_u32(#offset, 0)),
-            (Self::Uint64, Value::Uint64(x)) => quote!(#reader.read_u64(#offset, #x)),
-            (Self::Uint64, _) => quote!(#reader.read_u64(#offset, 0)),
-            (Self::Text, _) => {
-                quote!(#reader.read_pointer(#offset)?.into_list_reader()?.read_text()?)
+        }
+        Type::List(type_list) => {
+            let Some(item) = type_list.element_type.as_deref() else {
+                return None;
+            };
+            let item = define_type(context, item, false)?;
+            quote!(Vec<#item>)
+        }
+        _ => return None,
+    };
+    Some(r)
+}
+
+fn read_list(context: &CompilerContext, offset: u32, ty: &Type) -> Option<TokenStream> {
+    let reader = format_ident!("reader");
+    let reader = quote!(#reader.read_pointer(#offset)?.into_list_reader()?);
+    let r = match ty {
+        Type::Bool => quote!(#reader.read_bool_children()?),
+        Type::Int8 => quote!(#reader.read_i8_children()?),
+        Type::Uint8 => quote!(#reader.read_u8_children()?),
+        Type::Struct(type_struct) => {
+            let Some(node) = context.get_node(type_struct.type_id) else {
+                return None;
+            };
+            let name = format_ident!("{}", context.get_full_name(node));
+            quote!(#reader.read_struct_children::<#name>()?)
+        }
+        _ => return None,
+    };
+    Some(r)
+}
+
+fn read_slot(context: &CompilerContext, slot: &Field__Slot, is_box: bool) -> Option<TokenStream> {
+    let Some(ty) = slot.r#type.as_deref() else {
+        return None;
+    };
+    let reader = format_ident!("reader");
+    let offset = slot.offset;
+    let default_value = slot.default_value.as_deref().unwrap_or(&Value::Void);
+    let r = match (ty, default_value) {
+        (Type::Void, _) => quote!(()),
+        (Type::Bool, Value::Bool(x)) => quote!(#reader.read_bool(#offset, #x)),
+        (Type::Bool, _) => quote!(#reader.read_bool(#offset, false)),
+        (Type::Int8, Value::Int8(x)) => quote!(#reader.read_i8(#offset, #x)),
+        (Type::Int8, _) => quote!(#reader.read_i8(#offset, 0)),
+        (Type::Int16, Value::Int16(x)) => quote!(#reader.read_i16(#offset, #x)),
+        (Type::Int16, _) => quote!(#reader.read_i16(#offset, 0)),
+        (Type::Int32, Value::Int32(x)) => quote!(#reader.read_i32(#offset, #x)),
+        (Type::Int32, _) => quote!(#reader.read_i32(#offset, 0)),
+        (Type::Int64, Value::Int64(x)) => quote!(#reader.read_i64(#offset, #x)),
+        (Type::Int64, _) => quote!(#reader.read_i64(#offset, 0)),
+        (Type::Uint8, Value::Uint8(x)) => quote!(#reader.read_u8(#offset, #x)),
+        (Type::Uint8, _) => quote!(#reader.read_u8(#offset, 0)),
+        (Type::Uint16, Value::Uint16(x)) => quote!(#reader.read_u16(#offset, #x)),
+        (Type::Uint16, _) => quote!(#reader.read_u16(#offset, 0)),
+        (Type::Uint32, Value::Uint32(x)) => quote!(#reader.read_u32(#offset, #x)),
+        (Type::Uint32, _) => quote!(#reader.read_u32(#offset, 0)),
+        (Type::Uint64, Value::Uint64(x)) => quote!(#reader.read_u64(#offset, #x)),
+        (Type::Uint64, _) => quote!(#reader.read_u64(#offset, 0)),
+        (Type::Text, _) => {
+            quote!(#reader.read_pointer(#offset)?.into_list_reader()?.read_text()?)
+        }
+        (Type::Struct(type_struct), _) => {
+            let Some(node) = context.get_node(type_struct.type_id) else {
+                return None;
+            };
+            let name = format_ident!("{}", context.get_full_name(node));
+            let r = quote!(#reader.read_struct_child::<#name>(#offset));
+            if is_box {
+                quote!(#r.ok().map(Box::new))
+            } else {
+                quote!(#r?)
             }
-            (Self::Struct(type_struct), _) => {
-                let Some(node) = context.get_node(type_struct.type_id) else {
-                    return None;
-                };
-                let name = context.get_full_name(node);
-                let name = format_ident!("{}", name);
-                quote!(#reader.read_struct_child::<#name>(#offset))
-            }
-            _ => return None,
-        };
-        Some(t)
-    }
+        }
+        (Type::List(type_list), _) => {
+            let Some(ty) = type_list.element_type.as_deref() else {
+                return None;
+            };
+            read_list(context, offset, ty)?
+        }
+        _ => return None,
+    };
+    Some(r)
 }
 
 fn generate_common_struct(
@@ -116,16 +150,13 @@ fn generate_common_struct(
             let name = field_ident(&field.0.name);
             match &field.1 {
                 Some(Field_Union::Slot(slot)) => {
-                    let ty = slot.r#type.as_ref().unwrap().rust_declaration(context)?;
-                    if slot.r#type.as_ref().unwrap().rust_boxed() {
-                        Some(quote! {
-                                pub #name: Option<Box<#ty>>,
-                        })
-                    } else {
-                        Some(quote! {
+                    let Some(ty) = slot.r#type.as_deref() else {
+                        return None
+                    };
+                    let ty = define_type(context, ty, true)?;
+                    Some(quote! {
                         pub #name: #ty,
-                        })
-                    }
+                    })
                 }
                 Some(Field_Union::Group(group)) => {
                     let node = context.get_node(group.type_id)?;
@@ -147,20 +178,10 @@ fn generate_common_struct(
             let name = field_ident(&field.0.name);
             match &field.1 {
                 Some(Field_Union::Slot(slot)) => {
-                    let p = slot.r#type.as_ref().unwrap().rust_parser(
-                        context,
-                        slot.offset,
-                        &slot.default_value,
-                    )?;
-                    if slot.r#type.as_ref().unwrap().rust_boxed() {
-                        Some(quote! {
-                            #name: #p.ok().map(Box::new),
-                        })
-                    } else {
-                        Some(quote! {
-                            #name: #p,
-                        })
-                    }
+                    let p = read_slot(context, slot, true)?;
+                    Some(quote! {
+                        #name: #p,
+                    })
                 }
                 Some(Field_Union::Group(group)) => {
                     let node = context.get_node(group.type_id)?;
@@ -200,13 +221,15 @@ fn generate_variant_struct(
             let field_name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
             match &field.1 {
                 Some(Field_Union::Slot(slot)) => {
-                    let ty = slot.r#type.as_ref().unwrap();
-                    if ty == &Box::new(Type::Void) {
+                    let Some(ty) = slot.r#type.as_deref() else {
+                        return None
+                    };
+                    if ty == &Type::Void {
                         Some(quote! {
-                            pub #field_name,
+                            #field_name,
                         })
                     } else {
-                        let ty = slot.r#type.as_ref().unwrap().rust_declaration(context)?;
+                        let ty = define_type(context, ty, false);
                         Some(quote! { #field_name ( #ty ), })
                     }
                 }
@@ -232,18 +255,10 @@ fn generate_variant_struct(
                             #i => Self::#field_name,
                         });
                     };
-                    let Some(p) = ty.rust_parser(context, slot.offset, &slot.default_value) else {
-                        return None;
-                    };
-                    if ty.rust_boxed() {
-                        Some(quote! {
-                            #i => Self::#field_name(#p?),
-                        })
-                    } else {
-                        Some(quote! {
-                            #i => Self::#field_name(#p),
-                        })
-                    }
+                    let p = read_slot(context, slot, false)?;
+                    Some(quote! {
+                        #i => Self::#field_name(#p),
+                    })
                 }
                 Some(Field_Union::Group(group)) => {
                     let node = context.get_node(group.type_id)?;
@@ -303,7 +318,7 @@ fn generate_node_struct(
             #common
             #variant
 
-            #[derive(Debug, PartialEq)]
+            #[derive(Debug, Clone, PartialEq)]
             pub struct #total(pub #common_name, pub #variant_name);
 
             impl CapnpPlainStruct for #total {

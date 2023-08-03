@@ -9,6 +9,7 @@ use capnp_plain::pointer::struct_pointer::{CapnpPlainStruct, StructReader};
 pub struct Field_0 {
     pub name: String,
     pub code_order: u16,
+    pub annotations: Vec<Annotation>,
     pub discriminant_value: u16,
     pub ordinal: Field__Ordinal,
 }
@@ -17,6 +18,10 @@ impl CapnpPlainStruct for Field_0 {
         let value = Field_0 {
             name: reader.read_pointer(0u32)?.into_list_reader()?.read_text()?,
             code_order: reader.read_u16(0u32, 0u16),
+            annotations: reader
+                .read_pointer(1u32)?
+                .into_list_reader()?
+                .read_struct_children::<Annotation>()?,
             discriminant_value: reader.read_u16(1u32, 65535u16),
             ordinal: Field__Ordinal::try_from_reader(reader)?,
         };
@@ -39,7 +44,7 @@ impl CapnpPlainStruct for Field_1 {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Field(pub Field_0, pub Field_1);
 impl CapnpPlainStruct for Field {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
@@ -57,6 +62,9 @@ pub struct Node_0 {
     pub display_name: String,
     pub display_name_prefix_length: u32,
     pub scope_id: u64,
+    pub nested_nodes: Vec<Node__NestedNode>,
+    pub annotations: Vec<Annotation>,
+    pub parameters: Vec<Node__Parameter>,
     pub is_generic: bool,
 }
 impl CapnpPlainStruct for Node_0 {
@@ -66,6 +74,18 @@ impl CapnpPlainStruct for Node_0 {
             display_name: reader.read_pointer(0u32)?.into_list_reader()?.read_text()?,
             display_name_prefix_length: reader.read_u32(2u32, 0u32),
             scope_id: reader.read_u64(2u32, 0u64),
+            nested_nodes: reader
+                .read_pointer(1u32)?
+                .into_list_reader()?
+                .read_struct_children::<Node__NestedNode>()?,
+            annotations: reader
+                .read_pointer(2u32)?
+                .into_list_reader()?
+                .read_struct_children::<Annotation>()?,
+            parameters: reader
+                .read_pointer(5u32)?
+                .into_list_reader()?
+                .read_struct_children::<Node__Parameter>()?,
             is_generic: reader.read_bool(288u32, false),
         };
         Ok(value)
@@ -95,7 +115,7 @@ impl CapnpPlainStruct for Node_1 {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Node(pub Node_0, pub Node_1);
 impl CapnpPlainStruct for Node {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
@@ -114,6 +134,7 @@ pub struct Node__Struct {
     pub is_group: bool,
     pub discriminant_count: u16,
     pub discriminant_offset: u32,
+    pub fields: Vec<Field>,
 }
 impl CapnpPlainStruct for Node__Struct {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
@@ -123,6 +144,10 @@ impl CapnpPlainStruct for Node__Struct {
             is_group: reader.read_bool(224u32, false),
             discriminant_count: reader.read_u16(15u32, 0u16),
             discriminant_offset: reader.read_u32(8u32, 0u32),
+            fields: reader
+                .read_pointer(3u32)?
+                .into_list_reader()?
+                .read_struct_children::<Field>()?,
         };
         Ok(value)
     }
@@ -131,21 +156,33 @@ impl CapnpPlainStruct for Node__Struct {
 pub struct Enumerant {
     pub name: String,
     pub code_order: u16,
+    pub annotations: Vec<Annotation>,
 }
 impl CapnpPlainStruct for Enumerant {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Enumerant {
             name: reader.read_pointer(0u32)?.into_list_reader()?.read_text()?,
             code_order: reader.read_u16(0u32, 0u16),
+            annotations: reader
+                .read_pointer(1u32)?
+                .into_list_reader()?
+                .read_struct_children::<Annotation>()?,
         };
         Ok(value)
     }
 }
 #[derive(Debug, Clone, PartialEq)]
-pub struct Node__Enum {}
+pub struct Node__Enum {
+    pub enumerants: Vec<Enumerant>,
+}
 impl CapnpPlainStruct for Node__Enum {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
-        let value = Node__Enum {};
+        let value = Node__Enum {
+            enumerants: reader
+                .read_pointer(3u32)?
+                .into_list_reader()?
+                .read_struct_children::<Enumerant>()?,
+        };
         Ok(value)
     }
 }
@@ -155,8 +192,10 @@ pub struct Method {
     pub code_order: u16,
     pub param_struct_type: u64,
     pub result_struct_type: u64,
+    pub annotations: Vec<Annotation>,
     pub param_brand: Option<Box<Brand>>,
     pub result_brand: Option<Box<Brand>>,
+    pub implicit_parameters: Vec<Node__Parameter>,
 }
 impl CapnpPlainStruct for Method {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
@@ -165,8 +204,16 @@ impl CapnpPlainStruct for Method {
             code_order: reader.read_u16(0u32, 0u16),
             param_struct_type: reader.read_u64(1u32, 0u64),
             result_struct_type: reader.read_u64(2u32, 0u64),
+            annotations: reader
+                .read_pointer(1u32)?
+                .into_list_reader()?
+                .read_struct_children::<Annotation>()?,
             param_brand: reader.read_struct_child::<Brand>(2u32).ok().map(Box::new),
             result_brand: reader.read_struct_child::<Brand>(3u32).ok().map(Box::new),
+            implicit_parameters: reader
+                .read_pointer(4u32)?
+                .into_list_reader()?
+                .read_struct_children::<Node__Parameter>()?,
         };
         Ok(value)
     }
@@ -186,10 +233,22 @@ impl CapnpPlainStruct for Superclass {
     }
 }
 #[derive(Debug, Clone, PartialEq)]
-pub struct Node__Interface {}
+pub struct Node__Interface {
+    pub methods: Vec<Method>,
+    pub superclasses: Vec<Superclass>,
+}
 impl CapnpPlainStruct for Node__Interface {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
-        let value = Node__Interface {};
+        let value = Node__Interface {
+            methods: reader
+                .read_pointer(3u32)?
+                .into_list_reader()?
+                .read_struct_children::<Method>()?,
+            superclasses: reader
+                .read_pointer(4u32)?
+                .into_list_reader()?
+                .read_struct_children::<Superclass>()?,
+        };
         Ok(value)
     }
 }
@@ -259,8 +318,11 @@ pub enum Value {
     Float64(f64),
     Text(String),
     Data(Vec<u8>),
+    List(),
     Enum(u16),
+    Struct(),
     Interface,
+    AnyPointer(),
     UnknownDiscriminant,
 }
 impl CapnpPlainStruct for Value {
@@ -379,10 +441,17 @@ impl CapnpPlainStruct for Node__Parameter {
     }
 }
 #[derive(Debug, Clone, PartialEq)]
-pub struct Brand {}
+pub struct Brand {
+    pub scopes: Vec<Brand__Scope>,
+}
 impl CapnpPlainStruct for Brand {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
-        let value = Brand {};
+        let value = Brand {
+            scopes: reader
+                .read_pointer(0u32)?
+                .into_list_reader()?
+                .read_struct_children::<Brand__Scope>()?,
+        };
         Ok(value)
     }
 }
@@ -400,19 +469,28 @@ impl CapnpPlainStruct for Brand__Scope_0 {
 }
 #[derive(Debug, Clone, PartialEq)]
 pub enum Brand__Scope_1 {
+    Bind(Vec<Brand__Binding>),
     Inherit,
     UnknownDiscriminant,
 }
 impl CapnpPlainStruct for Brand__Scope_1 {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = match reader.read_u16(0, 0) {
+            0u16 => {
+                Self::Bind(
+                    reader
+                        .read_pointer(0u32)?
+                        .into_list_reader()?
+                        .read_struct_children::<Brand__Binding>()?,
+                )
+            }
             1u16 => Self::Inherit,
             _ => Self::UnknownDiscriminant,
         };
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Brand__Scope(pub Brand__Scope_0, pub Brand__Scope_1);
 impl CapnpPlainStruct for Brand__Scope {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
@@ -630,12 +708,17 @@ impl CapnpPlainStruct for Node__SourceInfo__Member {
 pub struct Node__SourceInfo {
     pub id: u64,
     pub doc_comment: String,
+    pub members: Vec<Node__SourceInfo__Member>,
 }
 impl CapnpPlainStruct for Node__SourceInfo {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Node__SourceInfo {
             id: reader.read_u64(0u32, 0u64),
             doc_comment: reader.read_pointer(0u32)?.into_list_reader()?.read_text()?,
+            members: reader
+                .read_pointer(1u32)?
+                .into_list_reader()?
+                .read_struct_children::<Node__SourceInfo__Member>()?,
         };
         Ok(value)
     }
@@ -660,27 +743,47 @@ impl CapnpPlainStruct for CapnpVersion {
 pub struct CodeGeneratorRequest__RequestedFile {
     pub id: u64,
     pub filename: String,
+    pub imports: Vec<CodeGeneratorRequest__RequestedFile__Import>,
 }
 impl CapnpPlainStruct for CodeGeneratorRequest__RequestedFile {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = CodeGeneratorRequest__RequestedFile {
             id: reader.read_u64(0u32, 0u64),
             filename: reader.read_pointer(0u32)?.into_list_reader()?.read_text()?,
+            imports: reader
+                .read_pointer(1u32)?
+                .into_list_reader()?
+                .read_struct_children::<CodeGeneratorRequest__RequestedFile__Import>()?,
         };
         Ok(value)
     }
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct CodeGeneratorRequest {
+    pub nodes: Vec<Node>,
+    pub requested_files: Vec<CodeGeneratorRequest__RequestedFile>,
     pub capnp_version: Option<Box<CapnpVersion>>,
+    pub source_info: Vec<Node__SourceInfo>,
 }
 impl CapnpPlainStruct for CodeGeneratorRequest {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = CodeGeneratorRequest {
+            nodes: reader
+                .read_pointer(0u32)?
+                .into_list_reader()?
+                .read_struct_children::<Node>()?,
+            requested_files: reader
+                .read_pointer(1u32)?
+                .into_list_reader()?
+                .read_struct_children::<CodeGeneratorRequest__RequestedFile>()?,
             capnp_version: reader
                 .read_struct_child::<CapnpVersion>(2u32)
                 .ok()
                 .map(Box::new),
+            source_info: reader
+                .read_pointer(3u32)?
+                .into_list_reader()?
+                .read_struct_children::<Node__SourceInfo>()?,
         };
         Ok(value)
     }
