@@ -5,7 +5,7 @@
 #![allow(unused)]
 use anyhow::Result;
 use capnp_plain::pointer::struct_pointer::{CapnpPlainStruct, StructReader};
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Field_0 {
     pub name: String,
     pub code_order: u16,
@@ -23,7 +23,7 @@ impl CapnpPlainStruct for Field_0 {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Field_1 {
     Slot(Field__Slot),
     Group(Field__Group),
@@ -51,7 +51,7 @@ impl CapnpPlainStruct for Field {
         )
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Node_0 {
     pub id: u64,
     pub display_name: String,
@@ -71,7 +71,7 @@ impl CapnpPlainStruct for Node_0 {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Node_1 {
     File,
     Struct(Node__Struct),
@@ -107,7 +107,7 @@ impl CapnpPlainStruct for Node {
         )
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Node__Struct {
     pub data_word_count: u16,
     pub pointer_count: u16,
@@ -127,7 +127,7 @@ impl CapnpPlainStruct for Node__Struct {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Enumerant {
     pub name: String,
     pub code_order: u16,
@@ -141,7 +141,7 @@ impl CapnpPlainStruct for Enumerant {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Node__Enum {}
 impl CapnpPlainStruct for Node__Enum {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
@@ -149,7 +149,7 @@ impl CapnpPlainStruct for Node__Enum {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Method {
     pub name: String,
     pub code_order: u16,
@@ -171,7 +171,7 @@ impl CapnpPlainStruct for Method {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Superclass {
     pub id: u64,
     pub brand: Option<Box<Brand>>,
@@ -185,7 +185,7 @@ impl CapnpPlainStruct for Superclass {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Node__Interface {}
 impl CapnpPlainStruct for Node__Interface {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
@@ -193,7 +193,7 @@ impl CapnpPlainStruct for Node__Interface {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Type {
     Void,
     Bool,
@@ -243,7 +243,7 @@ impl CapnpPlainStruct for Type {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Void,
     Bool(bool),
@@ -286,7 +286,7 @@ impl CapnpPlainStruct for Value {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Node__Const {
     pub r#type: Option<Box<Type>>,
     pub value: Option<Box<Value>>,
@@ -300,7 +300,7 @@ impl CapnpPlainStruct for Node__Const {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Node__Annotation {
     pub r#type: Option<Box<Type>>,
     pub targets_file: bool,
@@ -336,7 +336,7 @@ impl CapnpPlainStruct for Node__Annotation {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Node__NestedNode {
     pub name: String,
     pub id: u64,
@@ -350,7 +350,7 @@ impl CapnpPlainStruct for Node__NestedNode {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Annotation {
     pub id: u64,
     pub value: Option<Box<Value>>,
@@ -366,7 +366,7 @@ impl CapnpPlainStruct for Annotation {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Node__Parameter {
     pub name: String,
 }
@@ -378,7 +378,7 @@ impl CapnpPlainStruct for Node__Parameter {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Brand {}
 impl CapnpPlainStruct for Brand {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
@@ -386,7 +386,7 @@ impl CapnpPlainStruct for Brand {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Brand__Scope_0 {
     pub scope_id: u64,
 }
@@ -398,7 +398,7 @@ impl CapnpPlainStruct for Brand__Scope_0 {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Brand__Scope_1 {
     Inherit,
     UnknownDiscriminant,
@@ -424,7 +424,7 @@ impl CapnpPlainStruct for Brand__Scope {
         )
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Brand__Binding {
     Unbound,
     Type(Type),
@@ -440,7 +440,7 @@ impl CapnpPlainStruct for Brand__Binding {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Type__List {
     pub element_type: Option<Box<Type>>,
 }
@@ -452,7 +452,7 @@ impl CapnpPlainStruct for Type__List {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Type__Enum {
     pub type_id: u64,
     pub brand: Option<Box<Brand>>,
@@ -466,7 +466,7 @@ impl CapnpPlainStruct for Type__Enum {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Type__Struct {
     pub type_id: u64,
     pub brand: Option<Box<Brand>>,
@@ -480,7 +480,7 @@ impl CapnpPlainStruct for Type__Struct {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Type__Interface {
     pub type_id: u64,
     pub brand: Option<Box<Brand>>,
@@ -494,7 +494,7 @@ impl CapnpPlainStruct for Type__Interface {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Type__AnyPointer__Unconstrained {
     AnyKind,
     Struct,
@@ -514,7 +514,7 @@ impl CapnpPlainStruct for Type__AnyPointer__Unconstrained {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Type__AnyPointer__Parameter {
     pub scope_id: u64,
     pub parameter_index: u16,
@@ -528,7 +528,7 @@ impl CapnpPlainStruct for Type__AnyPointer__Parameter {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Type__AnyPointer__ImplicitMethodParameter {
     pub parameter_index: u16,
 }
@@ -540,7 +540,7 @@ impl CapnpPlainStruct for Type__AnyPointer__ImplicitMethodParameter {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Type__AnyPointer {
     Unconstrained(Type__AnyPointer__Unconstrained),
     Parameter(Type__AnyPointer__Parameter),
@@ -568,7 +568,7 @@ impl CapnpPlainStruct for Type__AnyPointer {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Field__Slot {
     pub offset: u32,
     pub r#type: Option<Box<Type>>,
@@ -586,7 +586,7 @@ impl CapnpPlainStruct for Field__Slot {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Field__Group {
     pub type_id: u64,
 }
@@ -598,7 +598,7 @@ impl CapnpPlainStruct for Field__Group {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Field__Ordinal {
     Implicit,
     Explicit(u16),
@@ -614,7 +614,7 @@ impl CapnpPlainStruct for Field__Ordinal {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Node__SourceInfo__Member {
     pub doc_comment: String,
 }
@@ -626,7 +626,7 @@ impl CapnpPlainStruct for Node__SourceInfo__Member {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Node__SourceInfo {
     pub id: u64,
     pub doc_comment: String,
@@ -640,7 +640,7 @@ impl CapnpPlainStruct for Node__SourceInfo {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CapnpVersion {
     pub major: u16,
     pub minor: u8,
@@ -656,7 +656,7 @@ impl CapnpPlainStruct for CapnpVersion {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CodeGeneratorRequest__RequestedFile {
     pub id: u64,
     pub filename: String,
@@ -670,7 +670,7 @@ impl CapnpPlainStruct for CodeGeneratorRequest__RequestedFile {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CodeGeneratorRequest {
     pub capnp_version: Option<Box<CapnpVersion>>,
 }
@@ -685,7 +685,7 @@ impl CapnpPlainStruct for CodeGeneratorRequest {
         Ok(value)
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CodeGeneratorRequest__RequestedFile__Import {
     pub id: u64,
     pub name: String,

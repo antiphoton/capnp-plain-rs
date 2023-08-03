@@ -173,7 +173,7 @@ fn generate_common_struct(
         })
         .collect();
     let delcaration = quote! {
-        #[derive(Debug, PartialEq)]
+        #[derive(Debug, Clone, PartialEq)]
         pub struct #name {
             #(#definitions)*
         }
@@ -257,7 +257,7 @@ fn generate_variant_struct(
         .collect();
     let name = format_ident!("{}", name);
     let declaration = quote! {
-        #[derive(Debug, PartialEq)]
+        #[derive(Debug, Clone, PartialEq)]
         pub enum #name {
             #(#definitions)*
             UnknownDiscriminant,
