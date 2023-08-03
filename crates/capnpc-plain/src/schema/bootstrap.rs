@@ -3,7 +3,7 @@
 use anyhow::Result;
 use capnp_plain::pointer::struct_pointer::{CapnpPlainStruct, StructReader};
 
-use super::{schema_capnp::Field__group, Type};
+use super::{schema_capnp::Field__Group, Type};
 
 #[derive(Debug)]
 pub struct Field__Slot {
@@ -28,7 +28,7 @@ pub struct Field_Common {
 #[derive(Debug)]
 pub enum Field_Union {
     Slot(Field__Slot),
-    Group(Field__group),
+    Group(Field__Group),
 }
 
 #[derive(Debug)]
@@ -46,7 +46,7 @@ impl CapnpPlainStruct for Field {
                 offset: reader.read_u32(1, 0),
                 r#type: Type::try_from_reader(reader.read_pointer(2)?.into_struct_reader()?)?,
             })),
-            1 => Some(Field_Union::Group(Field__group::try_from_reader(reader)?)),
+            1 => Some(Field_Union::Group(Field__Group::try_from_reader(reader)?)),
             _ => None,
         };
         Ok(Field(common, union))
