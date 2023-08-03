@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use convert_case::{Case, Casing};
+
 use crate::schema::{CodeGeneratorRequest, Node};
 
 pub struct CompilerContext<'a> {
@@ -26,7 +28,11 @@ impl<'a> CompilerContext<'a> {
         }
     }
     pub fn get_full_name(&self, node: &Node) -> String {
-        let a = self.get_name_segments(node);
+        let a: Vec<_> = self
+            .get_name_segments(node)
+            .iter()
+            .map(|s| s.to_case(Case::UpperCamel))
+            .collect();
         a[1..].join("__")
     }
 }
