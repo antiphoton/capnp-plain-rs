@@ -33,7 +33,7 @@ pub enum Field_1 {
 }
 impl CapnpPlainStruct for Field_1 {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
-        let value = match reader.read_u16(0, 0) {
+        let value = match reader.read_u16(4u32, 0) {
             0u16 => Self::Slot(Field__Slot::try_from_reader(reader)?),
             1u16 => Self::Group(Field__Group::try_from_reader(reader)?),
             _ => Self::UnknownDiscriminant,
@@ -91,7 +91,7 @@ pub enum Node_1 {
 }
 impl CapnpPlainStruct for Node_1 {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
-        let value = match reader.read_u16(0, 0) {
+        let value = match reader.read_u16(6u32, 0) {
             0u16 => Self::File,
             1u16 => Self::Struct(Node__Struct::try_from_reader(reader)?),
             2u16 => Self::Enum(Node__Enum::try_from_reader(reader)?),
@@ -245,7 +245,7 @@ pub enum Type {
 }
 impl CapnpPlainStruct for Type {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
-        let value = match reader.read_u16(0, 0) {
+        let value = match reader.read_u16(0u32, 0) {
             0u16 => Self::Void,
             1u16 => Self::Bool,
             2u16 => Self::Int8,
@@ -295,7 +295,7 @@ pub enum Value {
 }
 impl CapnpPlainStruct for Value {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
-        let value = match reader.read_u16(0, 0) {
+        let value = match reader.read_u16(0u32, 0) {
             0u16 => Self::Void,
             1u16 => Self::Bool(reader.read_bool(16u32, false)),
             2u16 => Self::Int8(reader.read_i8(2u32, 0i8)),
@@ -438,7 +438,7 @@ pub enum Brand__Scope_1 {
 }
 impl CapnpPlainStruct for Brand__Scope_1 {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
-        let value = match reader.read_u16(0, 0) {
+        let value = match reader.read_u16(4u32, 0) {
             0u16 => {
                 Self::Bind(reader.read_list_field(0u32, |r| r.read_struct_children()))
             }
@@ -468,7 +468,7 @@ pub enum Brand__Binding {
 }
 impl CapnpPlainStruct for Brand__Binding {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
-        let value = match reader.read_u16(0, 0) {
+        let value = match reader.read_u16(0u32, 0) {
             0u16 => Self::Unbound,
             1u16 => Self::Type(reader.read_struct_child::<Type>(0u32)?),
             _ => Self::UnknownDiscriminant,
@@ -540,7 +540,7 @@ pub enum Type__AnyPointer__Unconstrained {
 }
 impl CapnpPlainStruct for Type__AnyPointer__Unconstrained {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
-        let value = match reader.read_u16(0, 0) {
+        let value = match reader.read_u16(5u32, 0) {
             0u16 => Self::AnyKind,
             1u16 => Self::Struct,
             2u16 => Self::List,
@@ -585,7 +585,7 @@ pub enum Type__AnyPointer {
 }
 impl CapnpPlainStruct for Type__AnyPointer {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
-        let value = match reader.read_u16(0, 0) {
+        let value = match reader.read_u16(4u32, 0) {
             0u16 => {
                 Self::Unconstrained(
                     Type__AnyPointer__Unconstrained::try_from_reader(reader)?,
@@ -642,7 +642,7 @@ pub enum Field__Ordinal {
 }
 impl CapnpPlainStruct for Field__Ordinal {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
-        let value = match reader.read_u16(0, 0) {
+        let value = match reader.read_u16(5u32, 0) {
             0u16 => Self::Implicit,
             1u16 => Self::Explicit(reader.read_u16(6u32, 0u16)),
             _ => Self::UnknownDiscriminant,

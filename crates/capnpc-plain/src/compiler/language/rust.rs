@@ -210,6 +210,7 @@ fn generate_variant_struct(
     context: &CompilerContext,
     name: &Ident,
     fields: &BTreeMap<u16, &Field>,
+    discriminant_offset: u32,
 ) -> TokenStream {
     let definitions: Vec<_> = fields
         .iter()
@@ -276,7 +277,7 @@ fn generate_variant_struct(
 
         impl CapnpPlainStruct for #name {
             fn try_from_reader(reader: StructReader) -> Result<Self> {
-                let value = match reader.read_u16(0, 0) {
+                let value = match reader.read_u16(#discriminant_offset, 0) {
                     #(#arms)*
                     _ => Self::UnknownDiscriminant,
                 };
@@ -301,15 +302,17 @@ fn generate_node_struct(
         .into_iter()
         .map(|f| (f.0.discriminant_value, f))
         .collect();
+    let discriminant_offset = node_struct.discriminant_offset;
     if variant_fields.is_empty() {
         generate_common_struct(context, &total, &common_fields)
     } else if common_fields.is_empty() {
-        generate_variant_struct(context, &total, &variant_fields)
+        generate_variant_struct(context, &total, &variant_fields, discriminant_offset)
     } else {
         let common_name = format_ident!("{}_0", name);
         let common = generate_common_struct(context, &common_name, &common_fields);
         let variant_name = format_ident!("{}_1", name);
-        let variant = generate_variant_struct(context, &variant_name, &variant_fields);
+        let variant =
+            generate_variant_struct(context, &variant_name, &variant_fields, discriminant_offset);
         quote! {
             #common
             #variant
