@@ -7,7 +7,7 @@ use anyhow::Result;
 use capnp_plain::message::Message;
 use compiler::write_rust_code;
 
-use schema::CodeGeneratorRequest;
+use schema::schema_capnp::CodeGeneratorRequest;
 
 fn main() -> Result<()> {
     let input = {

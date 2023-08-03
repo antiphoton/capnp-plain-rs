@@ -8,9 +8,8 @@ use quote::{format_ident, quote};
 
 use crate::{
     compiler::context::CompilerContext,
-    schema::{
-        CodeGeneratorRequest, Field, Field_Union, Field__Slot, Node_Union, Node__Struct, Type,
-        Value,
+    schema::schema_capnp::{
+        CodeGeneratorRequest, Field, Field_1, Field__Slot, Node_1, Node__Struct, Type, Value,
     },
 };
 
@@ -145,7 +144,7 @@ fn generate_common_struct(
             }
             let name = field_ident(&field.0.name);
             match &field.1 {
-                Some(Field_Union::Slot(slot)) => {
+                Field_1::Slot(slot) => {
                     let Some(ty) = slot.r#type.as_deref() else {
                         return None
                     };
@@ -154,7 +153,7 @@ fn generate_common_struct(
                         pub #name: #ty,
                     })
                 }
-                Some(Field_Union::Group(group)) => {
+                Field_1::Group(group) => {
                     let node = context.get_node(group.type_id)?;
                     let ty = format_ident!("{}", context.get_full_name(node));
                     Some(quote! {
@@ -173,13 +172,13 @@ fn generate_common_struct(
             }
             let name = field_ident(&field.0.name);
             match &field.1 {
-                Some(Field_Union::Slot(slot)) => {
+                Field_1::Slot(slot) => {
                     let p = read_slot(context, slot, true)?;
                     Some(quote! {
                         #name: #p,
                     })
                 }
-                Some(Field_Union::Group(group)) => {
+                Field_1::Group(group) => {
                     let node = context.get_node(group.type_id)?;
                     let ty = context.get_full_name(node);
                     let ty = format_ident!("{}", ty);
@@ -217,7 +216,7 @@ fn generate_variant_struct(
         .filter_map(|(_, field)| {
             let field_name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
             match &field.1 {
-                Some(Field_Union::Slot(slot)) => {
+                Field_1::Slot(slot) => {
                     let Some(ty) = slot.r#type.as_deref() else {
                         return None
                     };
@@ -230,7 +229,7 @@ fn generate_variant_struct(
                         Some(quote! { #field_name ( #ty ), })
                     }
                 }
-                Some(Field_Union::Group(group)) => {
+                Field_1::Group(group) => {
                     let node = context.get_node(group.type_id)?;
                     let ty = context.get_full_name(node);
                     let ty = format_ident!("{}", ty);
@@ -245,7 +244,7 @@ fn generate_variant_struct(
         .filter_map(|(i, field)| {
             let field_name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
             match &field.1 {
-                Some(Field_Union::Slot(slot)) => {
+                Field_1::Slot(slot) => {
                     let ty = slot.r#type.as_ref().unwrap();
                     if ty == &Box::new(Type::Void) {
                         return Some(quote! {
@@ -257,7 +256,7 @@ fn generate_variant_struct(
                         #i => Self::#field_name(#p),
                     })
                 }
-                Some(Field_Union::Group(group)) => {
+                Field_1::Group(group) => {
                     let node = context.get_node(group.type_id)?;
                     let ty = context.get_full_name(node);
                     let ty = format_ident!("{}", ty);
@@ -337,7 +336,7 @@ pub fn generate_code(code_generator_request: &CodeGeneratorRequest) -> TokenStre
     let context = CompilerContext::new(code_generator_request);
     let mut output = vec![];
     for node in nodes {
-        if let Some(Node_Union::Struct(node_struct)) = &node.1 {
+        if let Node_1::Struct(node_struct) = &node.1 {
             let struct_name = context.get_full_name(node);
             output.push(generate_node_struct(&context, &struct_name, node_struct));
         }

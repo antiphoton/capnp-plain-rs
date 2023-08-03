@@ -7,7 +7,7 @@ use anyhow::{ensure, Result};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::schema::CodeGeneratorRequest;
+use crate::schema::schema_capnp::CodeGeneratorRequest;
 fn get_output_file_name(
     code_generator_request: &CodeGeneratorRequest,
     extension: &str,
