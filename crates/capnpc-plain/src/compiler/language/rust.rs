@@ -58,19 +58,32 @@ impl Type {
         &self,
         context: &CompilerContext,
         offset: u32,
-        default_value: &Value,
+        default_value: &Option<Box<Value>>,
     ) -> Option<TokenStream> {
+        let default_value = match default_value {
+            Some(x) => x.as_ref(),
+            None => &Value::Void,
+        };
         let reader = format_ident!("reader");
         let t = match (self, default_value) {
             (Self::Void, _) => quote!(()),
+            (Self::Bool, Value::Bool(x)) => quote!(#reader.read_bool(#offset, #x)),
             (Self::Bool, _) => quote!(#reader.read_bool(#offset, false)),
+            (Self::Int8, Value::Int8(x)) => quote!(#reader.read_i8(#offset, #x)),
             (Self::Int8, _) => quote!(#reader.read_i8(#offset, 0)),
+            (Self::Int16, Value::Int16(x)) => quote!(#reader.read_i16(#offset, #x)),
             (Self::Int16, _) => quote!(#reader.read_i16(#offset, 0)),
+            (Self::Int32, Value::Int32(x)) => quote!(#reader.read_i32(#offset, #x)),
             (Self::Int32, _) => quote!(#reader.read_i32(#offset, 0)),
+            (Self::Int64, Value::Int64(x)) => quote!(#reader.read_i64(#offset, #x)),
             (Self::Int64, _) => quote!(#reader.read_i64(#offset, 0)),
+            (Self::Uint8, Value::Uint8(x)) => quote!(#reader.read_u8(#offset, #x)),
             (Self::Uint8, _) => quote!(#reader.read_u8(#offset, 0)),
+            (Self::Uint16, Value::Uint16(x)) => quote!(#reader.read_u16(#offset, #x)),
             (Self::Uint16, _) => quote!(#reader.read_u16(#offset, 0)),
+            (Self::Uint32, Value::Uint32(x)) => quote!(#reader.read_u32(#offset, #x)),
             (Self::Uint32, _) => quote!(#reader.read_u32(#offset, 0)),
+            (Self::Uint64, Value::Uint64(x)) => quote!(#reader.read_u64(#offset, #x)),
             (Self::Uint64, _) => quote!(#reader.read_u64(#offset, 0)),
             (Self::Text, _) => {
                 quote!(#reader.read_pointer(#offset)?.into_list_reader()?.read_text()?)
@@ -103,8 +116,8 @@ fn generate_common_struct(
             let name = field_ident(&field.0.name);
             match &field.1 {
                 Some(Field_Union::Slot(slot)) => {
-                    let ty = &slot.r#type.rust_declaration(context)?;
-                    if slot.r#type.rust_boxed() {
+                    let ty = slot.r#type.as_ref().unwrap().rust_declaration(context)?;
+                    if slot.r#type.as_ref().unwrap().rust_boxed() {
                         Some(quote! {
                                 pub #name: Option<Box<#ty>>,
                         })
@@ -134,10 +147,12 @@ fn generate_common_struct(
             let name = field_ident(&field.0.name);
             match &field.1 {
                 Some(Field_Union::Slot(slot)) => {
-                    let p = &slot
-                        .r#type
-                        .rust_parser(context, slot.offset, &Value::Void)?;
-                    if slot.r#type.rust_boxed() {
+                    let p = slot.r#type.as_ref().unwrap().rust_parser(
+                        context,
+                        slot.offset,
+                        &slot.default_value,
+                    )?;
+                    if slot.r#type.as_ref().unwrap().rust_boxed() {
                         Some(quote! {
                             #name: #p.ok().map(Box::new),
                         })
@@ -185,13 +200,13 @@ fn generate_variant_struct(
             let field_name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
             match &field.1 {
                 Some(Field_Union::Slot(slot)) => {
-                    let ty = &slot.r#type;
-                    if ty == &Type::Void {
+                    let ty = slot.r#type.as_ref().unwrap();
+                    if ty == &Box::new(Type::Void) {
                         Some(quote! {
                             pub #field_name,
                         })
                     } else {
-                        let ty = &slot.r#type.rust_declaration(context)?;
+                        let ty = slot.r#type.as_ref().unwrap().rust_declaration(context)?;
                         Some(quote! { #field_name ( #ty ), })
                     }
                 }
@@ -211,13 +226,13 @@ fn generate_variant_struct(
             let field_name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
             match &field.1 {
                 Some(Field_Union::Slot(slot)) => {
-                    let ty = &slot.r#type;
-                    if ty == &Type::Void {
+                    let ty = slot.r#type.as_ref().unwrap();
+                    if ty == &Box::new(Type::Void) {
                         return Some(quote! {
                             #i => Self::#field_name,
                         });
                     };
-                    let Some(p) = ty.rust_parser(context, slot.offset, &Value::Void) else {
+                    let Some(p) = ty.rust_parser(context, slot.offset, &slot.default_value) else {
                         return None;
                     };
                     if ty.rust_boxed() {

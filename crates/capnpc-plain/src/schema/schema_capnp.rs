@@ -16,8 +16,8 @@ impl CapnpPlainStruct for Field_0 {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Field_0 {
             name: reader.read_pointer(0u32)?.into_list_reader()?.read_text()?,
-            code_order: reader.read_u16(0u32, 0),
-            discriminant_value: reader.read_u16(1u32, 0),
+            code_order: reader.read_u16(0u32, 0u16),
+            discriminant_value: reader.read_u16(1u32, 65535u16),
             ordinal: Field__Ordinal::try_from_reader(reader)?,
         };
         Ok(value)
@@ -62,10 +62,10 @@ pub struct Node_0 {
 impl CapnpPlainStruct for Node_0 {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Node_0 {
-            id: reader.read_u64(0u32, 0),
+            id: reader.read_u64(0u32, 0u64),
             display_name: reader.read_pointer(0u32)?.into_list_reader()?.read_text()?,
-            display_name_prefix_length: reader.read_u32(2u32, 0),
-            scope_id: reader.read_u64(2u32, 0),
+            display_name_prefix_length: reader.read_u32(2u32, 0u32),
+            scope_id: reader.read_u64(2u32, 0u64),
             is_generic: reader.read_bool(288u32, false),
         };
         Ok(value)
@@ -118,11 +118,11 @@ pub struct Node__Struct {
 impl CapnpPlainStruct for Node__Struct {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Node__Struct {
-            data_word_count: reader.read_u16(7u32, 0),
-            pointer_count: reader.read_u16(12u32, 0),
+            data_word_count: reader.read_u16(7u32, 0u16),
+            pointer_count: reader.read_u16(12u32, 0u16),
             is_group: reader.read_bool(224u32, false),
-            discriminant_count: reader.read_u16(15u32, 0),
-            discriminant_offset: reader.read_u32(8u32, 0),
+            discriminant_count: reader.read_u16(15u32, 0u16),
+            discriminant_offset: reader.read_u32(8u32, 0u32),
         };
         Ok(value)
     }
@@ -136,7 +136,7 @@ impl CapnpPlainStruct for Enumerant {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Enumerant {
             name: reader.read_pointer(0u32)?.into_list_reader()?.read_text()?,
-            code_order: reader.read_u16(0u32, 0),
+            code_order: reader.read_u16(0u32, 0u16),
         };
         Ok(value)
     }
@@ -162,9 +162,9 @@ impl CapnpPlainStruct for Method {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Method {
             name: reader.read_pointer(0u32)?.into_list_reader()?.read_text()?,
-            code_order: reader.read_u16(0u32, 0),
-            param_struct_type: reader.read_u64(1u32, 0),
-            result_struct_type: reader.read_u64(2u32, 0),
+            code_order: reader.read_u16(0u32, 0u16),
+            param_struct_type: reader.read_u64(1u32, 0u64),
+            result_struct_type: reader.read_u64(2u32, 0u64),
             param_brand: reader.read_struct_child::<Brand>(2u32).ok().map(Box::new),
             result_brand: reader.read_struct_child::<Brand>(3u32).ok().map(Box::new),
         };
@@ -179,7 +179,7 @@ pub struct Superclass {
 impl CapnpPlainStruct for Superclass {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Superclass {
-            id: reader.read_u64(0u32, 0),
+            id: reader.read_u64(0u32, 0u64),
             brand: reader.read_struct_child::<Brand>(0u32).ok().map(Box::new),
         };
         Ok(value)
@@ -268,18 +268,18 @@ impl CapnpPlainStruct for Value {
         let value = match reader.read_u16(0, 0) {
             0u16 => Self::Void,
             1u16 => Self::Bool(reader.read_bool(16u32, false)),
-            2u16 => Self::Int8(reader.read_i8(2u32, 0)),
-            3u16 => Self::Int16(reader.read_i16(1u32, 0)),
-            4u16 => Self::Int32(reader.read_i32(1u32, 0)),
-            5u16 => Self::Int64(reader.read_i64(1u32, 0)),
-            6u16 => Self::Uint8(reader.read_u8(2u32, 0)),
-            7u16 => Self::Uint16(reader.read_u16(1u32, 0)),
-            8u16 => Self::Uint32(reader.read_u32(1u32, 0)),
-            9u16 => Self::Uint64(reader.read_u64(1u32, 0)),
+            2u16 => Self::Int8(reader.read_i8(2u32, 0i8)),
+            3u16 => Self::Int16(reader.read_i16(1u32, 0i16)),
+            4u16 => Self::Int32(reader.read_i32(1u32, 0i32)),
+            5u16 => Self::Int64(reader.read_i64(1u32, 0i64)),
+            6u16 => Self::Uint8(reader.read_u8(2u32, 0u8)),
+            7u16 => Self::Uint16(reader.read_u16(1u32, 0u16)),
+            8u16 => Self::Uint32(reader.read_u32(1u32, 0u32)),
+            9u16 => Self::Uint64(reader.read_u64(1u32, 0u64)),
             12u16 => {
                 Self::Text(reader.read_pointer(0u32)?.into_list_reader()?.read_text()?)
             }
-            15u16 => Self::Enum(reader.read_u16(1u32, 0)),
+            15u16 => Self::Enum(reader.read_u16(1u32, 0u16)),
             17u16 => Self::Interface,
             _ => Self::UnknownDiscriminant,
         };
@@ -345,7 +345,7 @@ impl CapnpPlainStruct for Node__NestedNode {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Node__NestedNode {
             name: reader.read_pointer(0u32)?.into_list_reader()?.read_text()?,
-            id: reader.read_u64(0u32, 0),
+            id: reader.read_u64(0u32, 0u64),
         };
         Ok(value)
     }
@@ -359,7 +359,7 @@ pub struct Annotation {
 impl CapnpPlainStruct for Annotation {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Annotation {
-            id: reader.read_u64(0u32, 0),
+            id: reader.read_u64(0u32, 0u64),
             value: reader.read_struct_child::<Value>(0u32).ok().map(Box::new),
             brand: reader.read_struct_child::<Brand>(1u32).ok().map(Box::new),
         };
@@ -393,7 +393,7 @@ pub struct Brand__Scope_0 {
 impl CapnpPlainStruct for Brand__Scope_0 {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Brand__Scope_0 {
-            scope_id: reader.read_u64(0u32, 0),
+            scope_id: reader.read_u64(0u32, 0u64),
         };
         Ok(value)
     }
@@ -460,7 +460,7 @@ pub struct Type__Enum {
 impl CapnpPlainStruct for Type__Enum {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Type__Enum {
-            type_id: reader.read_u64(1u32, 0),
+            type_id: reader.read_u64(1u32, 0u64),
             brand: reader.read_struct_child::<Brand>(0u32).ok().map(Box::new),
         };
         Ok(value)
@@ -474,7 +474,7 @@ pub struct Type__Struct {
 impl CapnpPlainStruct for Type__Struct {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Type__Struct {
-            type_id: reader.read_u64(1u32, 0),
+            type_id: reader.read_u64(1u32, 0u64),
             brand: reader.read_struct_child::<Brand>(0u32).ok().map(Box::new),
         };
         Ok(value)
@@ -488,7 +488,7 @@ pub struct Type__Interface {
 impl CapnpPlainStruct for Type__Interface {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Type__Interface {
-            type_id: reader.read_u64(1u32, 0),
+            type_id: reader.read_u64(1u32, 0u64),
             brand: reader.read_struct_child::<Brand>(0u32).ok().map(Box::new),
         };
         Ok(value)
@@ -522,8 +522,8 @@ pub struct Type__AnyPointer__Parameter {
 impl CapnpPlainStruct for Type__AnyPointer__Parameter {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Type__AnyPointer__Parameter {
-            scope_id: reader.read_u64(2u32, 0),
-            parameter_index: reader.read_u16(5u32, 0),
+            scope_id: reader.read_u64(2u32, 0u64),
+            parameter_index: reader.read_u16(5u32, 0u16),
         };
         Ok(value)
     }
@@ -535,7 +535,7 @@ pub struct Type__AnyPointer__ImplicitMethodParameter {
 impl CapnpPlainStruct for Type__AnyPointer__ImplicitMethodParameter {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Type__AnyPointer__ImplicitMethodParameter {
-            parameter_index: reader.read_u16(5u32, 0),
+            parameter_index: reader.read_u16(5u32, 0u16),
         };
         Ok(value)
     }
@@ -578,7 +578,7 @@ pub struct Field__Slot {
 impl CapnpPlainStruct for Field__Slot {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Field__Slot {
-            offset: reader.read_u32(1u32, 0),
+            offset: reader.read_u32(1u32, 0u32),
             r#type: reader.read_struct_child::<Type>(2u32).ok().map(Box::new),
             default_value: reader.read_struct_child::<Value>(3u32).ok().map(Box::new),
             had_explicit_default: reader.read_bool(128u32, false),
@@ -593,7 +593,7 @@ pub struct Field__Group {
 impl CapnpPlainStruct for Field__Group {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Field__Group {
-            type_id: reader.read_u64(2u32, 0),
+            type_id: reader.read_u64(2u32, 0u64),
         };
         Ok(value)
     }
@@ -608,7 +608,7 @@ impl CapnpPlainStruct for Field__Ordinal {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = match reader.read_u16(0, 0) {
             0u16 => Self::Implicit,
-            1u16 => Self::Explicit(reader.read_u16(6u32, 0)),
+            1u16 => Self::Explicit(reader.read_u16(6u32, 0u16)),
             _ => Self::UnknownDiscriminant,
         };
         Ok(value)
@@ -634,7 +634,7 @@ pub struct Node__SourceInfo {
 impl CapnpPlainStruct for Node__SourceInfo {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = Node__SourceInfo {
-            id: reader.read_u64(0u32, 0),
+            id: reader.read_u64(0u32, 0u64),
             doc_comment: reader.read_pointer(0u32)?.into_list_reader()?.read_text()?,
         };
         Ok(value)
@@ -649,9 +649,9 @@ pub struct CapnpVersion {
 impl CapnpPlainStruct for CapnpVersion {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = CapnpVersion {
-            major: reader.read_u16(0u32, 0),
-            minor: reader.read_u8(2u32, 0),
-            micro: reader.read_u8(3u32, 0),
+            major: reader.read_u16(0u32, 0u16),
+            minor: reader.read_u8(2u32, 0u8),
+            micro: reader.read_u8(3u32, 0u8),
         };
         Ok(value)
     }
@@ -664,7 +664,7 @@ pub struct CodeGeneratorRequest__RequestedFile {
 impl CapnpPlainStruct for CodeGeneratorRequest__RequestedFile {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = CodeGeneratorRequest__RequestedFile {
-            id: reader.read_u64(0u32, 0),
+            id: reader.read_u64(0u32, 0u64),
             filename: reader.read_pointer(0u32)?.into_list_reader()?.read_text()?,
         };
         Ok(value)
@@ -693,7 +693,7 @@ pub struct CodeGeneratorRequest__RequestedFile__Import {
 impl CapnpPlainStruct for CodeGeneratorRequest__RequestedFile__Import {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         let value = CodeGeneratorRequest__RequestedFile__Import {
-            id: reader.read_u64(0u32, 0),
+            id: reader.read_u64(0u32, 0u64),
             name: reader.read_pointer(0u32)?.into_list_reader()?.read_text()?,
         };
         Ok(value)

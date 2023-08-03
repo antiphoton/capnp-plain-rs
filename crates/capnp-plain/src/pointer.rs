@@ -60,7 +60,7 @@ impl<'a> Reader<'a> {
     pub fn into_list_reader(self) -> Result<ListReader<'a>> {
         match self {
             Self::List(x) => Ok(x),
-            _ => todo!(),
+            _ => Err(Error::msg("")),
         }
     }
 }
