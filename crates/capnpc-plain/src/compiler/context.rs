@@ -12,6 +12,9 @@ impl<'a> CompilerContext<'a> {
         let node_map = nodes.iter().map(|node| (node.0.id, node)).collect();
         CompilerContext { node_map }
     }
+    pub fn get_node<'b>(&'b self, node_id: u64) -> Option<&'a Node> {
+        self.node_map.get(&node_id).copied()
+    }
     fn get_name_segments<'b>(&'b self, node: &'b Node) -> Vec<&'b str> {
         let s = &node.0.display_name[(node.0.display_name_prefix_length as usize)..];
         if let Some(p) = self.node_map.get(&node.0.scope_id) {

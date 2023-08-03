@@ -23,7 +23,10 @@ fn field_ident(s: &str) -> Ident {
 }
 
 impl Type {
-    fn get_rust_primitive(&self) -> Option<TokenStream> {
+    fn rust_boxed(&self) -> bool {
+        matches!(self, Self::Struct(_))
+    }
+    fn rust_declaration(&self, context: &CompilerContext) -> Option<TokenStream> {
         let t = match self {
             Self::Void => quote!(()),
             Self::Bool => quote!(bool),
@@ -39,11 +42,24 @@ impl Type {
             Self::Float64 => quote!(f64),
             Self::Text => quote!(String),
             Self::Data => quote!(Vec<u8>),
+            Self::Struct(type_struct) => {
+                let Some(node) = context.get_node(type_struct.type_id) else {
+                    return None;
+                };
+                let name = context.get_full_name(node);
+                let name = format_ident!("{}", name);
+                quote!(#name)
+            }
             _ => return None,
         };
         Some(t)
     }
-    fn get_rust_parser(&self, offset: u32, default_value: &Value) -> Option<TokenStream> {
+    fn rust_parser(
+        &self,
+        context: &CompilerContext,
+        offset: u32,
+        default_value: &Value,
+    ) -> Option<TokenStream> {
         let reader = format_ident!("reader");
         let t = match (self, default_value) {
             (Self::Void, _) => quote!(()),
@@ -59,13 +75,25 @@ impl Type {
             (Self::Text, _) => {
                 quote!(#reader.read_pointer(#offset)?.into_list_reader()?.read_text()?)
             }
+            (Self::Struct(type_struct), _) => {
+                let Some(node) = context.get_node(type_struct.type_id) else {
+                    return None;
+                };
+                let name = context.get_full_name(node);
+                let name = format_ident!("{}", name);
+                quote!(#name::try_from_reader(#reader.read_pointer(#offset)?.into_struct_reader()?)?)
+            }
             _ => return None,
         };
         Some(t)
     }
 }
 
-fn generate_common_struct(name: &Ident, fields: &[&Field]) -> TokenStream {
+fn generate_common_struct(
+    context: &CompilerContext,
+    name: &Ident,
+    fields: &[&Field],
+) -> TokenStream {
     let definitions: Vec<_> = fields
         .iter()
         .filter_map(|field| {
@@ -73,13 +101,28 @@ fn generate_common_struct(name: &Ident, fields: &[&Field]) -> TokenStream {
                 return None;
             }
             let name = field_ident(&field.0.name);
-            let Some(Field_Union::Slot(slot) )= &field.1 else {
-                return None
-            };
-            let ty = &slot.r#type.get_rust_primitive()?;
-            Some(quote! {
-                pub #name: #ty,
-            })
+            match &field.1 {
+                Some(Field_Union::Slot(slot)) => {
+                    let ty = &slot.r#type.rust_declaration(context)?;
+                    if slot.r#type.rust_boxed() {
+                        Some(quote! {
+                                pub #name: Option<Box<#ty>>,
+                        })
+                    } else {
+                        Some(quote! {
+                        pub #name: #ty,
+                        })
+                    }
+                }
+                Some(Field_Union::Group(group)) => {
+                    let node = context.get_node(group.type_id)?;
+                    let ty = format_ident!("{}", context.get_full_name(node));
+                    Some(quote! {
+                        pub #name: #ty,
+                    })
+                }
+                _ => None,
+            }
         })
         .collect();
     let parsers: Vec<_> = fields
@@ -89,13 +132,29 @@ fn generate_common_struct(name: &Ident, fields: &[&Field]) -> TokenStream {
                 return None;
             }
             let name = field_ident(&field.0.name);
-            let Some(Field_Union::Slot(slot))= &field.1 else {
-                return None
-            };
-            let p = &slot.r#type.get_rust_parser(slot.offset, &Value::Void)?;
-            Some(quote! {
-                #name: #p,
-            })
+            match &field.1 {
+                Some(Field_Union::Slot(slot)) => {
+                    let p = &slot
+                        .r#type
+                        .rust_parser(context, slot.offset, &Value::Void)?;
+                    if slot.r#type.rust_boxed() {
+                        Some(quote! {
+                            #name: Some(Box::new(#p)),
+                        })
+                    } else {
+                        Some(quote! {
+                            #name: #p,
+                        })
+                    }
+                }
+                Some(Field_Union::Group(group)) => {
+                    let node = context.get_node(group.type_id)?;
+                    let ty = context.get_full_name(node);
+                    let ty = format_ident!("{}", ty);
+                    Some(quote!(#name: #ty::try_from_reader(reader)?))
+                }
+                _ => None,
+            }
         })
         .collect();
     let delcaration = quote! {
@@ -115,44 +174,64 @@ fn generate_common_struct(name: &Ident, fields: &[&Field]) -> TokenStream {
     delcaration
 }
 
-fn generate_variant_struct(name: &Ident, fields: &BTreeMap<u16, &Field>) -> TokenStream {
+fn generate_variant_struct(
+    context: &CompilerContext,
+    name: &Ident,
+    fields: &BTreeMap<u16, &Field>,
+) -> TokenStream {
     let definitions: Vec<_> = fields
         .iter()
         .filter_map(|(_, field)| {
-            let Some(Field_Union::Slot(slot) )= &field.1 else {
-                return None
-            };
-            let name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
-            let ty = &slot.r#type;
-            if ty == &Type::Void {
-                Some(quote! {
-                    pub #name,
-                })
-            } else {
-                let ty = &slot.r#type.get_rust_primitive()?;
-                Some(quote! { #name ( #ty ), })
+            let field_name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
+            match &field.1 {
+                Some(Field_Union::Slot(slot)) => {
+                    let ty = &slot.r#type;
+                    if ty == &Type::Void {
+                        Some(quote! {
+                            pub #field_name,
+                        })
+                    } else {
+                        let ty = &slot.r#type.rust_declaration(context)?;
+                        Some(quote! { #field_name ( #ty ), })
+                    }
+                }
+                Some(Field_Union::Group(group)) => {
+                    let node = context.get_node(group.type_id)?;
+                    let ty = context.get_full_name(node);
+                    let ty = format_ident!("{}", ty);
+                    Some(quote!(#field_name (#ty),))
+                }
+                _ => None,
             }
         })
         .collect();
     let arms: Vec<_> = fields
         .iter()
         .filter_map(|(i, field)| {
-            let Some(Field_Union::Slot(slot) )= &field.1 else {
-                return None
-            };
-            let name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
-            let ty = &slot.r#type;
-            if ty == &Type::Void {
-                return Some(quote! {
-                    #i => Self::#name,
-                });
-            };
-            let Some(p) = ty.get_rust_parser(slot.offset, &Value::Void) else {
-                return None;
-            };
-            Some(quote! {
-                #i => Self::#name(#p),
-            })
+            let field_name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
+            match &field.1 {
+                Some(Field_Union::Slot(slot)) => {
+                    let ty = &slot.r#type;
+                    if ty == &Type::Void {
+                        return Some(quote! {
+                            #i => Self::#field_name,
+                        });
+                    };
+                    let Some(p) = ty.rust_parser(context, slot.offset, &Value::Void) else {
+                        return None;
+                    };
+                    Some(quote! {
+                        #i => Self::#field_name(#p),
+                    })
+                }
+                Some(Field_Union::Group(group)) => {
+                    let node = context.get_node(group.type_id)?;
+                    let ty = context.get_full_name(node);
+                    let ty = format_ident!("{}", ty);
+                    Some(quote!( #i => Self::#field_name (#ty::try_from_reader(reader)?),))
+                }
+                _ => None,
+            }
         })
         .collect();
     let name = format_ident!("{}", name);
@@ -176,7 +255,11 @@ fn generate_variant_struct(name: &Ident, fields: &BTreeMap<u16, &Field>) -> Toke
     declaration
 }
 
-fn generate_node_struct(name: &str, node_struct: &Node__Struct) -> TokenStream {
+fn generate_node_struct(
+    context: &CompilerContext,
+    name: &str,
+    node_struct: &Node__Struct,
+) -> TokenStream {
     let total = format_ident!("{}", name);
     let (common_fields, variant_fields) = node_struct
         .fields
@@ -187,14 +270,14 @@ fn generate_node_struct(name: &str, node_struct: &Node__Struct) -> TokenStream {
         .map(|f| (f.0.discriminant_value, f))
         .collect();
     if variant_fields.is_empty() {
-        generate_common_struct(&total, &common_fields)
+        generate_common_struct(context, &total, &common_fields)
     } else if common_fields.is_empty() {
-        generate_variant_struct(&total, &variant_fields)
+        generate_variant_struct(context, &total, &variant_fields)
     } else {
         let common_name = format_ident!("{}_0", name);
-        let common = generate_common_struct(&common_name, &common_fields);
+        let common = generate_common_struct(context, &common_name, &common_fields);
         let variant_name = format_ident!("{}_1", name);
-        let variant = generate_variant_struct(&variant_name, &variant_fields);
+        let variant = generate_variant_struct(context, &variant_name, &variant_fields);
         quote! {
             #common
             #variant
@@ -221,7 +304,7 @@ pub fn generate_code(code_generator_request: &CodeGeneratorRequest) -> TokenStre
     for node in nodes {
         if let Some(Node_Union::Struct(node_struct)) = &node.1 {
             let struct_name = context.get_full_name(node);
-            output.push(generate_node_struct(&struct_name, node_struct));
+            output.push(generate_node_struct(&context, &struct_name, node_struct));
         }
     }
     quote! {
