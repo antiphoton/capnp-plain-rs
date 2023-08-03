@@ -3,8 +3,8 @@ use super::StructReader;
 macro_rules! define_byte_reader {
     ($name:ident, $t:ty) => {
         impl<'a> StructReader<'a> {
-            pub fn $name(&self, offset: usize, default_value: $t) -> $t {
-                let byte_offset = std::mem::size_of::<$t>() * offset;
+            pub fn $name(&self, offset: u32, default_value: $t) -> $t {
+                let byte_offset = std::mem::size_of::<$t>() * offset as usize;
                 let i = byte_offset / 8;
                 let j = byte_offset % 8;
                 if let Some(word) = self.data.get(i) {
@@ -20,8 +20,8 @@ macro_rules! define_byte_reader {
 macro_rules! define_small_reader {
     ($name:ident, $t:ty, $($i:expr),+) => {
       impl<'a> StructReader<'a> {
-        pub fn $name(&self, offset: usize, default_value: $t) -> $t {
-            let byte_offset = std::mem::size_of::<$t>() * offset;
+        pub fn $name(&self, offset: u32, default_value: $t) -> $t {
+            let byte_offset = std::mem::size_of::<$t>() * offset as usize;
             let i = byte_offset / 8;
             let j = byte_offset % 8;
             let Some(word) = self.data.get(i) else {
@@ -38,8 +38,8 @@ macro_rules! define_small_reader {
 macro_rules! define_big_reader {
     ($name:ident, $t:ty) => {
         impl<'a> StructReader<'a> {
-            pub fn $name(&self, offset: usize, default_value: $t) -> $t {
-                if let Some(word) = self.data.get(offset) {
+            pub fn $name(&self, offset: u32, default_value: $t) -> $t {
+                if let Some(word) = self.data.get(offset as usize) {
                     let value = <$t>::from_le_bytes(word.0);
                     <$t>::from_ne_bytes(
                         (<u64>::from_ne_bytes(value.to_ne_bytes())
@@ -55,7 +55,8 @@ macro_rules! define_big_reader {
 }
 
 impl<'a> StructReader<'a> {
-    pub fn read_bool(&self, offset: usize, default_value: bool) -> bool {
+    pub fn read_bool(&self, offset: u32, default_value: bool) -> bool {
+        let offset = offset as usize;
         let i = offset / 64;
         let Some(word) = self.data.get(i)  else {
             return default_value;
