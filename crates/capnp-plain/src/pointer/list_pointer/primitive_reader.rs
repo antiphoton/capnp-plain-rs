@@ -52,11 +52,4 @@ impl<'a> ListReader<'a> {
             _ => todo!(),
         }
     }
-    pub fn read_text(&self) -> Result<String> {
-        let mut bytes = self.read_u8_children()?;
-        let terminator = bytes.pop();
-        ensure!(terminator == Some(0));
-        let s = String::from_utf8(bytes)?;
-        Ok(s)
-    }
 }

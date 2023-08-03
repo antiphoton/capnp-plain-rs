@@ -54,13 +54,13 @@ impl<'a> Reader<'a> {
     pub fn into_struct_reader(self) -> Result<StructReader<'a>> {
         match self {
             Self::Struct(x) => Ok(x),
-            _ => todo!(),
+            _ => Err(Error::msg("not a struct pointer")),
         }
     }
     pub fn into_list_reader(self) -> Result<ListReader<'a>> {
         match self {
             Self::List(x) => Ok(x),
-            _ => Err(Error::msg("")),
+            _ => Err(Error::msg("not a list pointer")),
         }
     }
 }

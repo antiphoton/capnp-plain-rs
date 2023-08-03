@@ -8,9 +8,8 @@ use quote::{format_ident, quote};
 
 use crate::{
     compiler::context::CompilerContext,
-    schema::{
-        CodeGeneratorRequest, Field, Field_Union, Field__Slot, Node_Union, Node__Struct, Type,
-        Value,
+    schema::schema_capnp::{
+        CodeGeneratorRequest, Field, Field_1, Field__Slot, Node_1, Node__Struct, Type, Value,
     },
 };
 
@@ -64,22 +63,18 @@ fn define_type(context: &CompilerContext, ty: &Type, is_box: bool) -> Option<Tok
     Some(r)
 }
 
-fn read_list(context: &CompilerContext, offset: u32, ty: &Type) -> Option<TokenStream> {
-    let reader = format_ident!("reader");
-    let reader = quote!(#reader.read_pointer(#offset)?.into_list_reader()?);
-    let r = match ty {
-        Type::Bool => quote!(#reader.read_bool_children()?),
-        Type::Int8 => quote!(#reader.read_i8_children()?),
-        Type::Uint8 => quote!(#reader.read_u8_children()?),
-        Type::Struct(type_struct) => {
-            let Some(node) = context.get_node(type_struct.type_id) else {
-                return None;
-            };
-            let name = format_ident!("{}", context.get_full_name(node));
-            quote!(#reader.read_struct_children::<#name>()?)
+fn read_list(_context: &CompilerContext, offset: u32, ty: &Type) -> Option<TokenStream> {
+    let callback = match ty {
+        Type::Bool => quote!(|r| r.read_bool_children()),
+        Type::Int8 => quote!(|r| r.read_i8_children()),
+        Type::Uint8 => quote!(|r| r.read_u8_children()),
+        Type::Struct(_) => {
+            quote!(|r| r.read_struct_children())
         }
         _ => return None,
     };
+    let reader = format_ident!("reader");
+    let r = quote!(#reader.read_list_field(#offset, #callback));
     Some(r)
 }
 
@@ -111,7 +106,7 @@ fn read_slot(context: &CompilerContext, slot: &Field__Slot, is_box: bool) -> Opt
         (Type::Uint64, Value::Uint64(x)) => quote!(#reader.read_u64(#offset, #x)),
         (Type::Uint64, _) => quote!(#reader.read_u64(#offset, 0)),
         (Type::Text, _) => {
-            quote!(#reader.read_pointer(#offset)?.into_list_reader()?.read_text()?)
+            quote!(#reader.read_text_field(#offset))
         }
         (Type::Struct(type_struct), _) => {
             let Some(node) = context.get_node(type_struct.type_id) else {
@@ -149,7 +144,7 @@ fn generate_common_struct(
             }
             let name = field_ident(&field.0.name);
             match &field.1 {
-                Some(Field_Union::Slot(slot)) => {
+                Field_1::Slot(slot) => {
                     let Some(ty) = slot.r#type.as_deref() else {
                         return None
                     };
@@ -158,7 +153,7 @@ fn generate_common_struct(
                         pub #name: #ty,
                     })
                 }
-                Some(Field_Union::Group(group)) => {
+                Field_1::Group(group) => {
                     let node = context.get_node(group.type_id)?;
                     let ty = format_ident!("{}", context.get_full_name(node));
                     Some(quote! {
@@ -177,13 +172,13 @@ fn generate_common_struct(
             }
             let name = field_ident(&field.0.name);
             match &field.1 {
-                Some(Field_Union::Slot(slot)) => {
+                Field_1::Slot(slot) => {
                     let p = read_slot(context, slot, true)?;
                     Some(quote! {
                         #name: #p,
                     })
                 }
-                Some(Field_Union::Group(group)) => {
+                Field_1::Group(group) => {
                     let node = context.get_node(group.type_id)?;
                     let ty = context.get_full_name(node);
                     let ty = format_ident!("{}", ty);
@@ -214,13 +209,14 @@ fn generate_variant_struct(
     context: &CompilerContext,
     name: &Ident,
     fields: &BTreeMap<u16, &Field>,
+    discriminant_offset: u32,
 ) -> TokenStream {
     let definitions: Vec<_> = fields
         .iter()
         .filter_map(|(_, field)| {
             let field_name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
             match &field.1 {
-                Some(Field_Union::Slot(slot)) => {
+                Field_1::Slot(slot) => {
                     let Some(ty) = slot.r#type.as_deref() else {
                         return None
                     };
@@ -233,7 +229,7 @@ fn generate_variant_struct(
                         Some(quote! { #field_name ( #ty ), })
                     }
                 }
-                Some(Field_Union::Group(group)) => {
+                Field_1::Group(group) => {
                     let node = context.get_node(group.type_id)?;
                     let ty = context.get_full_name(node);
                     let ty = format_ident!("{}", ty);
@@ -248,7 +244,7 @@ fn generate_variant_struct(
         .filter_map(|(i, field)| {
             let field_name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
             match &field.1 {
-                Some(Field_Union::Slot(slot)) => {
+                Field_1::Slot(slot) => {
                     let ty = slot.r#type.as_ref().unwrap();
                     if ty == &Box::new(Type::Void) {
                         return Some(quote! {
@@ -260,7 +256,7 @@ fn generate_variant_struct(
                         #i => Self::#field_name(#p),
                     })
                 }
-                Some(Field_Union::Group(group)) => {
+                Field_1::Group(group) => {
                     let node = context.get_node(group.type_id)?;
                     let ty = context.get_full_name(node);
                     let ty = format_ident!("{}", ty);
@@ -280,7 +276,7 @@ fn generate_variant_struct(
 
         impl CapnpPlainStruct for #name {
             fn try_from_reader(reader: StructReader) -> Result<Self> {
-                let value = match reader.read_u16(0, 0) {
+                let value = match reader.read_u16(#discriminant_offset, 0) {
                     #(#arms)*
                     _ => Self::UnknownDiscriminant,
                 };
@@ -305,15 +301,17 @@ fn generate_node_struct(
         .into_iter()
         .map(|f| (f.0.discriminant_value, f))
         .collect();
+    let discriminant_offset = node_struct.discriminant_offset;
     if variant_fields.is_empty() {
         generate_common_struct(context, &total, &common_fields)
     } else if common_fields.is_empty() {
-        generate_variant_struct(context, &total, &variant_fields)
+        generate_variant_struct(context, &total, &variant_fields, discriminant_offset)
     } else {
         let common_name = format_ident!("{}_0", name);
         let common = generate_common_struct(context, &common_name, &common_fields);
         let variant_name = format_ident!("{}_1", name);
-        let variant = generate_variant_struct(context, &variant_name, &variant_fields);
+        let variant =
+            generate_variant_struct(context, &variant_name, &variant_fields, discriminant_offset);
         quote! {
             #common
             #variant
@@ -338,7 +336,7 @@ pub fn generate_code(code_generator_request: &CodeGeneratorRequest) -> TokenStre
     let context = CompilerContext::new(code_generator_request);
     let mut output = vec![];
     for node in nodes {
-        if let Some(Node_Union::Struct(node_struct)) = &node.1 {
+        if let Node_1::Struct(node_struct) = &node.1 {
             let struct_name = context.get_full_name(node);
             output.push(generate_node_struct(&context, &struct_name, node_struct));
         }

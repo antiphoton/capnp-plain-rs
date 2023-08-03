@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use convert_case::{Case, Casing};
 
-use crate::schema::{CodeGeneratorRequest, Node};
+use crate::schema::schema_capnp::{CodeGeneratorRequest, Node};
 
 pub struct CompilerContext<'a> {
     pub node_map: HashMap<u64, &'a Node>,
