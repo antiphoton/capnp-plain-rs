@@ -8,7 +8,7 @@ use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    compiler::{context::CompilerContext, get_output_file_name},
+    compiler::{context::CompilerContext, get_output_file_name, split_fields},
     schema::schema_capnp::{
         CodeGeneratorRequest, Field, Field_1, Field__Slot, Node_1, Node__Enum, Node__Struct, Type,
         Value,
@@ -314,14 +314,7 @@ fn generate_node_struct(
     node_struct: &Node__Struct,
 ) -> TokenStream {
     let total = format_ident!("{}", name);
-    let (common_fields, variant_fields) = node_struct
-        .fields
-        .iter()
-        .partition::<Vec<_>, _>(|f| f.0.discriminant_value == 0xffff);
-    let variant_fields: BTreeMap<_, _> = variant_fields
-        .into_iter()
-        .map(|f| (f.0.discriminant_value, f))
-        .collect();
+    let (common_fields, variant_fields) = split_fields(&node_struct.fields);
     let discriminant_offset = node_struct.discriminant_offset;
     if variant_fields.is_empty() {
         generate_common_struct(context, &total, &common_fields)
