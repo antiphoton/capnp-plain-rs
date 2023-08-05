@@ -1,11 +1,7 @@
 mod context;
 mod language;
 
-use std::{fs::File, io::Write};
-
 use anyhow::{ensure, Result};
-use proc_macro2::TokenStream;
-use quote::quote;
 
 use crate::schema::schema_capnp::CodeGeneratorRequest;
 fn get_output_file_name(
@@ -18,25 +14,6 @@ fn get_output_file_name(
     Ok(format!("{}_capnp.{}", s, extension))
 }
 
-pub fn write_rust_code(code_generator_request: &CodeGeneratorRequest) -> Result<()> {
-    let mut file = File::create(get_output_file_name(code_generator_request, "rs")?)?;
-    let tokens = language::rust::generate_code(code_generator_request);
-    let tokens: TokenStream = tokens.into_iter().collect();
-    let output = quote! {
-        //! @generated
-        #![allow(clippy::all)]
-        #![allow(dead_code)]
-        #![allow(non_camel_case_types)]
-        #![allow(unused)]
-        use anyhow::Result;
-        use capnp_plain::pointer::struct_pointer::{CapnpPlainStruct, StructReader};
-        use num_derive::FromPrimitive;
-        use num_traits::FromPrimitive;
-        use serde::{Deserialize, Serialize};
-        #tokens
-    };
-    let output = syn::parse2(output)?;
-    let output = prettyplease::unparse(&output);
-    file.write_all(output.as_bytes())?;
-    Ok(())
+pub fn compile_rust_code(code_generator_request: &CodeGeneratorRequest) -> Result<()> {
+    language::rust::compile(code_generator_request)
 }
