@@ -1,13 +1,14 @@
 mod keyword;
 
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fs::File, io::Write};
 
+use anyhow::Result;
 use convert_case::{Case, Casing};
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    compiler::context::CompilerContext,
+    compiler::{context::CompilerContext, get_output_file_name, split_fields},
     schema::schema_capnp::{
         CodeGeneratorRequest, Field, Field_1, Field__Slot, Node_1, Node__Enum, Node__Struct, Type,
         Value,
@@ -288,6 +289,7 @@ fn generate_variant_struct(
     let name = format_ident!("{}", name);
     let declaration = quote! {
         #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+        #[serde(tag = "t", content = "c")]
         pub enum #name {
             #(#definitions)*
             UnknownDiscriminant,
@@ -312,14 +314,7 @@ fn generate_node_struct(
     node_struct: &Node__Struct,
 ) -> TokenStream {
     let total = format_ident!("{}", name);
-    let (common_fields, variant_fields) = node_struct
-        .fields
-        .iter()
-        .partition::<Vec<_>, _>(|f| f.0.discriminant_value == 0xffff);
-    let variant_fields: BTreeMap<_, _> = variant_fields
-        .into_iter()
-        .map(|f| (f.0.discriminant_value, f))
-        .collect();
+    let (common_fields, variant_fields) = split_fields(&node_struct.fields);
     let discriminant_offset = node_struct.discriminant_offset;
     if variant_fields.is_empty() {
         generate_common_struct(context, &total, &common_fields)
@@ -380,7 +375,7 @@ fn generate_node_enum(name: &str, node_enum: &Node__Enum) -> TokenStream {
     )
 }
 
-pub fn generate_code(code_generator_request: &CodeGeneratorRequest) -> TokenStream {
+fn generate_code(code_generator_request: &CodeGeneratorRequest) -> TokenStream {
     let CodeGeneratorRequest { nodes, .. } = code_generator_request;
     let context = CompilerContext::new(code_generator_request);
     let mut output = vec![];
@@ -396,4 +391,27 @@ pub fn generate_code(code_generator_request: &CodeGeneratorRequest) -> TokenStre
     quote! {
         #(#output )*
     }
+}
+
+pub fn compile(code_generator_request: &CodeGeneratorRequest) -> Result<()> {
+    let mut file = File::create(get_output_file_name(code_generator_request, "rs")?)?;
+    let tokens = generate_code(code_generator_request);
+    let tokens: TokenStream = tokens.into_iter().collect();
+    let output = quote! {
+        //! @generated
+        #![allow(clippy::all)]
+        #![allow(dead_code)]
+        #![allow(non_camel_case_types)]
+        #![allow(unused)]
+        use anyhow::Result;
+        use capnp_plain::pointer::struct_pointer::{CapnpPlainStruct, StructReader};
+        use num_derive::FromPrimitive;
+        use num_traits::FromPrimitive;
+        use serde::{Deserialize, Serialize};
+        #tokens
+    };
+    let output = syn::parse2(output)?;
+    let output = prettyplease::unparse(&output);
+    file.write_all(output.as_bytes())?;
+    Ok(())
 }

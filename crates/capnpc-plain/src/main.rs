@@ -5,8 +5,8 @@ use std::io::Read;
 
 use anyhow::Result;
 use capnp_plain::message::Message;
-use compiler::write_rust_code;
 
+use compiler::compile;
 use schema::schema_capnp::CodeGeneratorRequest;
 
 fn main() -> Result<()> {
@@ -17,6 +17,6 @@ fn main() -> Result<()> {
     };
     let message = Message::from_bytes(&input);
     let code_generator_request = message.read_root::<CodeGeneratorRequest>()?;
-    write_rust_code(&code_generator_request)?;
+    compile(&code_generator_request)?;
     Ok(())
 }

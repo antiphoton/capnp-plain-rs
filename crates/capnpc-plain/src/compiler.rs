@@ -1,13 +1,12 @@
 mod context;
 mod language;
 
-use std::{fs::File, io::Write};
+use std::collections::BTreeMap;
 
 use anyhow::{ensure, Result};
-use proc_macro2::TokenStream;
-use quote::quote;
 
-use crate::schema::schema_capnp::CodeGeneratorRequest;
+use crate::schema::schema_capnp::{CodeGeneratorRequest, Field};
+
 fn get_output_file_name(
     code_generator_request: &CodeGeneratorRequest,
     extension: &str,
@@ -18,25 +17,19 @@ fn get_output_file_name(
     Ok(format!("{}_capnp.{}", s, extension))
 }
 
-pub fn write_rust_code(code_generator_request: &CodeGeneratorRequest) -> Result<()> {
-    let mut file = File::create(get_output_file_name(code_generator_request, "rs")?)?;
-    let tokens = language::rust::generate_code(code_generator_request);
-    let tokens: TokenStream = tokens.into_iter().collect();
-    let output = quote! {
-        //! @generated
-        #![allow(clippy::all)]
-        #![allow(dead_code)]
-        #![allow(non_camel_case_types)]
-        #![allow(unused)]
-        use anyhow::Result;
-        use capnp_plain::pointer::struct_pointer::{CapnpPlainStruct, StructReader};
-        use num_derive::FromPrimitive;
-        use num_traits::FromPrimitive;
-        use serde::{Deserialize, Serialize};
-        #tokens
-    };
-    let output = syn::parse2(output)?;
-    let output = prettyplease::unparse(&output);
-    file.write_all(output.as_bytes())?;
+fn split_fields(fields: &[Field]) -> (Vec<&Field>, BTreeMap<u16, &Field>) {
+    let (common_fields, variant_fields) = fields
+        .iter()
+        .partition::<Vec<_>, _>(|f| f.0.discriminant_value == 0xffff);
+    let variant_fields: BTreeMap<_, _> = variant_fields
+        .into_iter()
+        .map(|f| (f.0.discriminant_value, f))
+        .collect();
+    (common_fields, variant_fields)
+}
+
+pub fn compile(code_generator_request: &CodeGeneratorRequest) -> Result<()> {
+    language::rust::compile(code_generator_request)?;
+    language::typescript::compile(code_generator_request)?;
     Ok(())
 }
