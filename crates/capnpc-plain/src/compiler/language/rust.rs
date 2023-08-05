@@ -208,7 +208,7 @@ fn generate_common_struct(
         })
         .collect();
     let delcaration = quote! {
-        #[derive(Debug, Clone, PartialEq)]
+        #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
         pub struct #name {
             #(#definitions)*
         }
@@ -287,7 +287,7 @@ fn generate_variant_struct(
         .collect();
     let name = format_ident!("{}", name);
     let declaration = quote! {
-        #[derive(Debug, Clone, PartialEq)]
+        #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
         pub enum #name {
             #(#definitions)*
             UnknownDiscriminant,
@@ -335,7 +335,7 @@ fn generate_node_struct(
             #common
             #variant
 
-            #[derive(Debug, Clone, PartialEq)]
+            #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
             pub struct #total(pub #common_name, pub #variant_name);
 
             impl CapnpPlainStruct for #total {
@@ -363,7 +363,7 @@ fn generate_node_enum(name: &str, node_enum: &Node__Enum) -> TokenStream {
     let name = format_ident!("{}", name);
     let max = node_enum.enumerants.len() as u16 - 1;
     quote!(
-        #[derive(Debug, Clone, PartialEq, FromPrimitive)]
+        #[derive(Debug, Clone, PartialEq, FromPrimitive, Serialize, Deserialize)]
         pub enum #name {
             #(#definitions)*
             UnknownEnumerant,

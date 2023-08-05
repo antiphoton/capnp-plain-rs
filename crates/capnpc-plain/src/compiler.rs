@@ -32,6 +32,7 @@ pub fn write_rust_code(code_generator_request: &CodeGeneratorRequest) -> Result<
         use capnp_plain::pointer::struct_pointer::{CapnpPlainStruct, StructReader};
         use num_derive::FromPrimitive;
         use num_traits::FromPrimitive;
+        use serde::{Deserialize, Serialize};
         #tokens
     };
     let output = syn::parse2(output)?;
