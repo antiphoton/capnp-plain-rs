@@ -289,6 +289,7 @@ fn generate_variant_struct(
     let name = format_ident!("{}", name);
     let declaration = quote! {
         #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+        #[serde(tag = "t", content = "c")]
         pub enum #name {
             #(#definitions)*
             UnknownDiscriminant,
