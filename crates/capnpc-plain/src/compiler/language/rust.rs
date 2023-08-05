@@ -9,7 +9,8 @@ use quote::{format_ident, quote};
 use crate::{
     compiler::context::CompilerContext,
     schema::schema_capnp::{
-        CodeGeneratorRequest, Field, Field_1, Field__Slot, Node_1, Node__Struct, Type, Value,
+        CodeGeneratorRequest, Field, Field_1, Field__Slot, Node_1, Node__Enum, Node__Struct, Type,
+        Value,
     },
 };
 
@@ -57,6 +58,13 @@ fn define_type(context: &CompilerContext, ty: &Type, is_box: bool) -> Option<Tok
             };
             let item = define_type(context, item, false)?;
             quote!(Vec<#item>)
+        }
+        Type::Enum(type_enum) => {
+            let Some(node) = context.get_node(type_enum.type_id) else {
+                return None;
+            };
+            let name = format_ident!("{}", context.get_full_name(node));
+            quote!(#name)
         }
         _ => return None,
     };
@@ -125,6 +133,17 @@ fn read_slot(context: &CompilerContext, slot: &Field__Slot, is_box: bool) -> Opt
                 return None;
             };
             read_list(context, offset, ty)?
+        }
+        (Type::Enum(type_enum), default_value) => {
+            let default_value = match default_value {
+                Value::Enum(x) => *x,
+                _ => 0,
+            };
+            let Some(node) = context.get_node(type_enum.type_id) else {
+                return None;
+            };
+            let name = format_ident!("{}", context.get_full_name(node));
+            quote!(#name::decode(#reader.read_u16(#offset, #default_value)))
         }
         _ => return None,
     };
@@ -331,15 +350,48 @@ fn generate_node_struct(
     }
 }
 
+fn generate_node_enum(name: &str, node_enum: &Node__Enum) -> TokenStream {
+    let definitions: Vec<_> = node_enum
+        .enumerants
+        .iter()
+        .map(|enumerant| {
+            let name = format_ident!("{}", enumerant.name.to_case(Case::UpperCamel));
+            let value = enumerant.code_order as isize;
+            quote!(#name = #value,)
+        })
+        .collect();
+    let name = format_ident!("{}", name);
+    let max = node_enum.enumerants.len() as u16 - 1;
+    quote!(
+        #[derive(Debug, Clone, PartialEq, FromPrimitive)]
+        pub enum #name {
+            #(#definitions)*
+            UnknownEnumerant,
+        }
+
+        impl #name {
+            pub fn decode(x: u16) -> Self {
+                match x {
+                    0..=#max => Self::from_u16(x).unwrap(),
+                    _ => Self::UnknownEnumerant,
+                }
+            }
+        }
+    )
+}
+
 pub fn generate_code(code_generator_request: &CodeGeneratorRequest) -> TokenStream {
     let CodeGeneratorRequest { nodes, .. } = code_generator_request;
     let context = CompilerContext::new(code_generator_request);
     let mut output = vec![];
     for node in nodes {
-        if let Node_1::Struct(node_struct) = &node.1 {
-            let struct_name = context.get_full_name(node);
-            output.push(generate_node_struct(&context, &struct_name, node_struct));
-        }
+        let name = context.get_full_name(node);
+        let code = match &node.1 {
+            Node_1::Struct(node_struct) => generate_node_struct(&context, &name, node_struct),
+            Node_1::Enum(node_enum) => generate_node_enum(&name, node_enum),
+            _ => quote!(),
+        };
+        output.push(code);
     }
     quote! {
         #(#output )*
