@@ -5,6 +5,28 @@
 #![allow(unused)]
 use anyhow::Result;
 use capnp_plain::pointer::struct_pointer::{CapnpPlainStruct, StructReader};
+use num_derive::FromPrimitive;
+use num_traits::FromPrimitive;
+#[derive(Debug, Clone, PartialEq, FromPrimitive)]
+pub enum ElementSize {
+    Empty = 0isize,
+    Bit = 1isize,
+    Byte = 2isize,
+    TwoBytes = 3isize,
+    FourBytes = 4isize,
+    EightBytes = 5isize,
+    Pointer = 6isize,
+    InlineComposite = 7isize,
+    UnknownEnumerant,
+}
+impl ElementSize {
+    pub fn decode(x: u16) -> Self {
+        match x {
+            0..=7u16 => Self::from_u16(x).unwrap(),
+            _ => Self::UnknownEnumerant,
+        }
+    }
+}
 #[derive(Debug, Clone, PartialEq)]
 pub struct Field_0 {
     pub name: String,
@@ -119,6 +141,7 @@ impl CapnpPlainStruct for Node {
 pub struct Node__Struct {
     pub data_word_count: u16,
     pub pointer_count: u16,
+    pub preferred_list_encoding: ElementSize,
     pub is_group: bool,
     pub discriminant_count: u16,
     pub discriminant_offset: u32,
@@ -129,6 +152,7 @@ impl CapnpPlainStruct for Node__Struct {
         let value = Node__Struct {
             data_word_count: reader.read_u16(7u32, 0u16),
             pointer_count: reader.read_u16(12u32, 0u16),
+            preferred_list_encoding: ElementSize::decode(reader.read_u16(13u32, 0u16)),
             is_group: reader.read_bool(224u32, false),
             discriminant_count: reader.read_u16(15u32, 0u16),
             discriminant_offset: reader.read_u32(8u32, 0u32),
