@@ -2,7 +2,6 @@ use crate::message::Message;
 
 use super::word_ref::WordRef;
 
-#[derive(Clone)]
 pub struct WordSlice<'a> {
     message: &'a Message,
     segment_id: usize,
@@ -18,6 +17,9 @@ impl<'a> WordSlice<'a> {
             offset,
             length,
         }
+    }
+    pub fn clone_ref(&self) -> Self {
+        Self::new(self.message, self.segment_id, self.offset, self.length)
     }
     pub fn get(&self, offset: usize) -> Option<WordRef> {
         if offset < self.length {

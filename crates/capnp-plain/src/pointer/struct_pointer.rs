@@ -44,7 +44,6 @@ impl TryFrom<Word> for StructPointer {
     }
 }
 
-#[derive(Clone)]
 pub struct StructReader<'a> {
     data: WordSlice<'a>,
     pointers: WordSlice<'a>,
@@ -61,6 +60,12 @@ impl<'a> StructReader<'a> {
         let pointers = content_base.get_sibling(offset + data_size as isize, pointer_size);
         let reader = StructReader { data, pointers };
         Ok(reader)
+    }
+    pub fn clone_ref(&self) -> Self {
+        Self {
+            data: self.data.clone_ref(),
+            pointers: self.pointers.clone_ref(),
+        }
     }
     pub fn read_pointer(&self, offset: u32) -> Result<Reader<'_>> {
         let x = self

@@ -336,7 +336,7 @@ fn generate_node_struct(
             impl CapnpPlainStruct for #total {
                 fn try_from_reader(reader: StructReader) -> Result<Self> {
                     Ok(#total(
-                        #common_name::try_from_reader(reader.clone())?,
+                        #common_name::try_from_reader(reader.clone_ref())?,
                         #variant_name::try_from_reader(reader)?,
                     ))
                 }

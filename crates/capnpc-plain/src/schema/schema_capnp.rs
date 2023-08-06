@@ -71,7 +71,7 @@ impl CapnpPlainStruct for Field {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         Ok(
             Field(
-                Field_0::try_from_reader(reader.clone())?,
+                Field_0::try_from_reader(reader.clone_ref())?,
                 Field_1::try_from_reader(reader)?,
             ),
         )
@@ -134,7 +134,7 @@ impl CapnpPlainStruct for Node {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         Ok(
             Node(
-                Node_0::try_from_reader(reader.clone())?,
+                Node_0::try_from_reader(reader.clone_ref())?,
                 Node_1::try_from_reader(reader)?,
             ),
         )
@@ -484,7 +484,7 @@ impl CapnpPlainStruct for Brand__Scope {
     fn try_from_reader(reader: StructReader) -> Result<Self> {
         Ok(
             Brand__Scope(
-                Brand__Scope_0::try_from_reader(reader.clone())?,
+                Brand__Scope_0::try_from_reader(reader.clone_ref())?,
                 Brand__Scope_1::try_from_reader(reader)?,
             ),
         )
