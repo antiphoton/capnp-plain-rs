@@ -1,8 +1,8 @@
-use super::StructReader;
+use super::StructNode;
 
 macro_rules! define_byte_reader {
     ($name:ident, $t:ty) => {
-        impl<'a> StructReader<'a> {
+        impl StructNode {
             pub fn $name(&self, offset: u32, default_value: $t) -> $t {
                 let byte_offset = std::mem::size_of::<$t>() * offset as usize;
                 let i = byte_offset / 8;
@@ -19,7 +19,7 @@ macro_rules! define_byte_reader {
 
 macro_rules! define_small_reader {
     ($name:ident, $t:ty, $($i:expr),+) => {
-      impl<'a> StructReader<'a> {
+      impl StructNode {
         pub fn $name(&self, offset: u32, default_value: $t) -> $t {
             let byte_offset = std::mem::size_of::<$t>() * offset as usize;
             let i = byte_offset / 8;
@@ -37,7 +37,7 @@ macro_rules! define_small_reader {
 
 macro_rules! define_big_reader {
     ($name:ident, $t:ty) => {
-        impl<'a> StructReader<'a> {
+        impl StructNode {
             pub fn $name(&self, offset: u32, default_value: $t) -> $t {
                 if let Some(word) = self.data.get(offset as usize) {
                     let value = <$t>::from_le_bytes(word.0);
@@ -54,7 +54,7 @@ macro_rules! define_big_reader {
     };
 }
 
-impl<'a> StructReader<'a> {
+impl StructNode {
     pub fn read_bool(&self, offset: u32, default_value: bool) -> bool {
         let offset = offset as usize;
         let i = offset / 64;
@@ -81,3 +81,14 @@ define_small_reader!(read_f32, f32, 0, 1, 2, 3);
 define_big_reader!(read_i64, i64);
 define_big_reader!(read_u64, u64);
 define_big_reader!(read_f64, f64);
+
+impl StructNode {
+    pub fn read_text(&self, offset: u32) -> String {
+        let mut bytes = self.read_list(offset, |r| r.read_u8_children());
+        let terminator = bytes.pop();
+        if terminator != Some(0) {
+            return "".to_string();
+        }
+        String::from_utf8(bytes).unwrap_or_default()
+    }
+}

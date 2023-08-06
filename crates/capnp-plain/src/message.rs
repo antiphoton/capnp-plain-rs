@@ -1,15 +1,14 @@
 pub mod segment;
+pub mod tree;
 pub mod word;
 
 use anyhow::Result;
 
 use crate::{
-    message::word::word_slice::WordSlice,
-    pointer::{struct_pointer::CapnpPlainStruct, Reader},
-    util::split_array::split_array_ref,
+    message::word::word_slice::WordSlice, util::split_array::split_array_ref, CapnpPlainStruct,
 };
 
-use self::{segment::Segment, word::word_ref::WordRef};
+use self::{segment::Segment, tree::Node, word::word_ref::WordRef};
 
 pub struct Message {
     segments: Vec<Segment>,
@@ -36,8 +35,11 @@ impl Message {
     }
     pub fn read_root<T: CapnpPlainStruct>(&self) -> Result<T> {
         let word_ref = WordRef::new(self, 0, 0);
-        let reader = Reader::new(word_ref)?.into_struct_reader()?;
-        T::try_from_reader(reader)
+        let root = Node::from_pointer(word_ref)?;
+        match root {
+            Node::Struct(x) => Ok(T::from_node(&x)),
+            _ => todo!(),
+        }
     }
     pub fn dump(&self, indent: usize) {
         let tab = " ".repeat(indent);

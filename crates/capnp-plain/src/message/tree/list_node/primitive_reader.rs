@@ -1,25 +1,25 @@
-use anyhow::{ensure, Result};
-
-use super::{ListReader, ScalarSize};
+use super::{ListNode, ScalarSize};
 
 macro_rules! define_byte_reader {
     ($name:ident, $s:expr, $t:ty) => {
-        impl<'a> ListReader<'a> {
-            pub fn $name(&self) -> Result<Vec<$t>> {
+        impl ListNode {
+            pub fn $name(&self) -> Vec<$t> {
                 match self {
                     Self::Scalar {
                         scalar_size,
                         list_len,
                         data,
                     } => {
-                        ensure!(*scalar_size == $s);
+                        if *scalar_size != $s {
+                            return Vec::with_capacity(0);
+                        }
                         let mut result = Vec::with_capacity(*list_len);
                         for index in 0..*list_len {
                             let i = index / 8;
                             let j = index % 8;
                             result.push(data.get(i).unwrap().0[j] as $t);
                         }
-                        Ok(result)
+                        result
                     }
                     _ => todo!(),
                 }
@@ -31,15 +31,17 @@ macro_rules! define_byte_reader {
 define_byte_reader!(read_i8_children, ScalarSize::OneByte, i8);
 define_byte_reader!(read_u8_children, ScalarSize::OneByte, u8);
 
-impl<'a> ListReader<'a> {
-    pub fn read_bool_children(&self) -> Result<Vec<bool>> {
+impl ListNode {
+    pub fn read_bool_children(&self) -> Vec<bool> {
         match self {
             Self::Scalar {
                 scalar_size,
                 list_len,
                 data,
             } => {
-                ensure!(*scalar_size == ScalarSize::OneBit);
+                if *scalar_size != ScalarSize::OneBit {
+                    return Vec::with_capacity(0);
+                }
                 let mut result = Vec::with_capacity(*list_len);
                 for index in 0..*list_len {
                     let i = index / 64;
@@ -47,7 +49,7 @@ impl<'a> ListReader<'a> {
                     let k = index % 8;
                     result.push((data.get(i).unwrap().0[j] >> k) % 2 == 1);
                 }
-                Ok(result)
+                result
             }
             _ => todo!(),
         }

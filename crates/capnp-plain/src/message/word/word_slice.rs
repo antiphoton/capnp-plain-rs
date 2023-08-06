@@ -1,8 +1,7 @@
 use crate::message::Message;
 
-use super::word_ref::WordRef;
+use super::{word_ref::WordRef, Word};
 
-#[derive(Clone)]
 pub struct WordSlice<'a> {
     message: &'a Message,
     segment_id: usize,
@@ -18,6 +17,11 @@ impl<'a> WordSlice<'a> {
             offset,
             length,
         }
+    }
+    pub fn copy_to_owned(&self) -> Vec<Word> {
+        let segment = &self.message.segments[self.segment_id];
+        let slice = &segment.words[self.offset..(self.offset + self.length)];
+        slice.to_owned()
     }
     pub fn get(&self, offset: usize) -> Option<WordRef> {
         if offset < self.length {

@@ -83,7 +83,7 @@ fn read_list(_context: &CompilerContext, offset: u32, ty: &Type) -> Option<Token
         _ => return None,
     };
     let reader = format_ident!("reader");
-    let r = quote!(#reader.read_list_field(#offset, #callback));
+    let r = quote!(#reader.read_list(#offset, #callback));
     Some(r)
 }
 
@@ -115,18 +115,18 @@ fn read_slot(context: &CompilerContext, slot: &Field__Slot, is_box: bool) -> Opt
         (Type::Uint64, Value::Uint64(x)) => quote!(#reader.read_u64(#offset, #x)),
         (Type::Uint64, _) => quote!(#reader.read_u64(#offset, 0)),
         (Type::Text, _) => {
-            quote!(#reader.read_text_field(#offset))
+            quote!(#reader.read_text(#offset))
         }
         (Type::Struct(type_struct), _) => {
             let Some(node) = context.get_node(type_struct.type_id) else {
                 return None;
             };
             let name = format_ident!("{}", context.get_full_name(node));
-            let r = quote!(#reader.read_struct_child::<#name>(#offset));
+            let r = quote!(#reader.read_struct(#offset));
             if is_box {
-                quote!(#r.ok().map(Box::new))
+                quote!(#r.map(|x| Box::new(#name::from_node(x))))
             } else {
-                quote!(#r?)
+                quote!(#name::from_node(#r.unwrap()))
             }
         }
         (Type::List(type_list), _) => {
@@ -202,7 +202,7 @@ fn generate_common_struct(
                     let node = context.get_node(group.type_id)?;
                     let ty = context.get_full_name(node);
                     let ty = format_ident!("{}", ty);
-                    Some(quote!(#name: #ty::try_from_reader(reader)?))
+                    Some(quote!(#name: #ty::from_node(reader)))
                 }
                 _ => None,
             }
@@ -214,11 +214,10 @@ fn generate_common_struct(
             #(#definitions)*
         }
         impl CapnpPlainStruct for #name {
-            fn try_from_reader(reader: StructReader) -> Result<Self> {
-                let value = #name {
+            fn from_node(reader: &CapnpStructNode) -> Self {
+                #name {
                     #(#parsers)*
-                };
-                Ok(value)
+                }
             }
         }
     };
@@ -280,7 +279,7 @@ fn generate_variant_struct(
                     let node = context.get_node(group.type_id)?;
                     let ty = context.get_full_name(node);
                     let ty = format_ident!("{}", ty);
-                    Some(quote!( #i => Self::#field_name (#ty::try_from_reader(reader)?),))
+                    Some(quote!( #i => Self::#field_name (#ty::from_node(reader)),))
                 }
                 _ => None,
             }
@@ -296,12 +295,11 @@ fn generate_variant_struct(
         }
 
         impl CapnpPlainStruct for #name {
-            fn try_from_reader(reader: StructReader) -> Result<Self> {
-                let value = match reader.read_u16(#discriminant_offset, 0) {
+            fn from_node(reader: &CapnpStructNode) -> Self {
+                match reader.read_u16(#discriminant_offset, 0) {
                     #(#arms)*
                     _ => Self::UnknownDiscriminant,
-                };
-                Ok(value)
+                }
             }
         }
     };
@@ -334,11 +332,11 @@ fn generate_node_struct(
             pub struct #total(pub #common_name, pub #variant_name);
 
             impl CapnpPlainStruct for #total {
-                fn try_from_reader(reader: StructReader) -> Result<Self> {
-                    Ok(#total(
-                        #common_name::try_from_reader(reader.clone())?,
-                        #variant_name::try_from_reader(reader)?,
-                    ))
+                fn from_node(reader: &CapnpStructNode) -> Self {
+                    #total(
+                        #common_name::from_node(reader),
+                        #variant_name::from_node(reader),
+                    )
                 }
             }
         }
@@ -404,7 +402,7 @@ pub fn compile(code_generator_request: &CodeGeneratorRequest) -> Result<()> {
         #![allow(non_camel_case_types)]
         #![allow(unused)]
         use anyhow::Result;
-        use capnp_plain::pointer::struct_pointer::{CapnpPlainStruct, StructReader};
+        use capnp_plain::{message::tree::struct_node::StructNode as CapnpStructNode, CapnpPlainStruct};
         use num_derive::FromPrimitive;
         use num_traits::FromPrimitive;
         use serde::{Deserialize, Serialize};
