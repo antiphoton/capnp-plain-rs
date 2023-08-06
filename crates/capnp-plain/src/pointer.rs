@@ -7,7 +7,7 @@ use anyhow::{ensure, Error, Result};
 use crate::message::word::word_ref::WordRef;
 use crate::message::word::Word;
 
-use self::far_pointer::{read_far_pointer, FarPointer};
+use self::far_pointer::{read_far_pointer, FarPointerOld};
 use self::list_pointer::{ListPointer, ListReader};
 use self::struct_pointer::{StructPointer, StructReader};
 
@@ -18,7 +18,7 @@ pub enum LocalPointer {
 
 pub enum Pointer {
     Local(LocalPointer),
-    Far(FarPointer),
+    Far(FarPointerOld),
 }
 
 impl TryFrom<Word> for Pointer {
@@ -27,7 +27,7 @@ impl TryFrom<Word> for Pointer {
         let pointer = match a[0] % 4 {
             0 => Self::Local(LocalPointer::Struct(StructPointer::try_from(Word(a))?)),
             1 => Self::Local(LocalPointer::List(ListPointer::try_from(Word(a))?)),
-            2 => Self::Far(FarPointer::try_from(Word(a))?),
+            2 => Self::Far(FarPointerOld::try_from(Word(a))?),
             _ => todo!(),
         };
         Ok(pointer)
