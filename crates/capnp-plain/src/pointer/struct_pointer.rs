@@ -16,7 +16,10 @@ mod primitive_reader;
 use anyhow::{Error, Result};
 
 use crate::{
-    message::word::{word_ref::WordRef, word_slice::WordSlice, Word},
+    message::{
+        tree::struct_node::StructNode,
+        word::{word_ref::WordRef, word_slice::WordSlice, Word},
+    },
     pointer::get_offset_bits,
 };
 
@@ -103,4 +106,7 @@ impl<'a> StructReader<'a> {
 
 pub trait CapnpPlainStruct: Sized {
     fn try_from_reader(reader: StructReader) -> Result<Self>;
+    fn from_node(_node: &StructNode) -> Self {
+        todo!()
+    }
 }

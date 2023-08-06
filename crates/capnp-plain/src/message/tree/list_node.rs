@@ -1,8 +1,10 @@
+mod primitive_reader;
+
 use crate::{
     message::word::{word_ref::WordRef, Word},
     pointer::{
         list_pointer::{ElementSize, ListPointer, ScalarSize},
-        struct_pointer::StructPointer,
+        struct_pointer::{CapnpPlainStruct, StructPointer},
     },
 };
 
@@ -18,7 +20,7 @@ pub enum ListNode {
 }
 
 impl ListNode {
-    pub fn read(list_pointer: ListPointer, content_base: WordRef) -> Self {
+    pub fn from_pointer(list_pointer: ListPointer, content_base: WordRef) -> Self {
         let ListPointer {
             offset,
             element_size,
@@ -54,12 +56,18 @@ impl ListNode {
                 let data = content_base.get_sibling(offset + 1, list_len);
                 let children: Vec<_> = (0..count)
                     .map(|index| {
-                        StructNode::read(tag.clone(), data.get(item_size * index).unwrap())
+                        StructNode::from_pointer(tag.clone(), data.get(item_size * index).unwrap())
                     })
                     .collect();
                 Self::Composite(children)
             }
             _ => todo!(),
+        }
+    }
+    pub fn read_struct_children<T: CapnpPlainStruct>(&self) -> Vec<T> {
+        match self {
+            Self::Composite(a) => a.iter().map(T::from_node).collect(),
+            _ => vec![],
         }
     }
 }
