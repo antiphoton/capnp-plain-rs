@@ -11,9 +11,13 @@ use self::far_pointer::{read_far_pointer, FarPointer};
 use self::list_pointer::{ListPointer, ListReader};
 use self::struct_pointer::{StructPointer, StructReader};
 
-pub enum Pointer {
+pub enum LocalPointer {
     Struct(StructPointer),
     List(ListPointer),
+}
+
+pub enum Pointer {
+    Local(LocalPointer),
     Far(FarPointer),
 }
 
@@ -21,8 +25,8 @@ impl TryFrom<Word> for Pointer {
     type Error = Error;
     fn try_from(Word(a): Word) -> Result<Self, Self::Error> {
         let pointer = match a[0] % 4 {
-            0 => Self::Struct(StructPointer::try_from(Word(a))?),
-            1 => Self::List(ListPointer::try_from(Word(a))?),
+            0 => Self::Local(LocalPointer::Struct(StructPointer::try_from(Word(a))?)),
+            1 => Self::Local(LocalPointer::List(ListPointer::try_from(Word(a))?)),
             2 => Self::Far(FarPointer::try_from(Word(a))?),
             _ => todo!(),
         };
@@ -36,11 +40,10 @@ pub enum Reader<'a> {
 }
 
 impl<'a> Reader<'a> {
-    pub fn new_local(pointer: Pointer, content_base: WordRef<'a>) -> Result<Self> {
+    pub fn new_local(pointer: LocalPointer, content_base: WordRef<'a>) -> Result<Self> {
         let reader = match pointer {
-            Pointer::Struct(p) => Self::Struct(StructReader::new(p, content_base)?),
-            Pointer::List(p) => Self::List(ListReader::new(p, content_base)?),
-            _ => todo!(),
+            LocalPointer::Struct(p) => Self::Struct(StructReader::new(p, content_base)?),
+            LocalPointer::List(p) => Self::List(ListReader::new(p, content_base)?),
         };
         Ok(reader)
     }
@@ -48,7 +51,7 @@ impl<'a> Reader<'a> {
         let pointer = Pointer::try_from(*word_ref)?;
         match pointer {
             Pointer::Far(_) => read_far_pointer(word_ref),
-            _ => Self::new_local(pointer, word_ref.get_next()),
+            Pointer::Local(local) => Self::new_local(local, word_ref.get_next()),
         }
     }
     pub fn into_struct_reader(self) -> Result<StructReader<'a>> {

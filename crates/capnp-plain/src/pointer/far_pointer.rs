@@ -59,10 +59,14 @@ pub fn read_far_pointer(word_ref: WordRef) -> Result<Reader> {
         ensure!(nested.double_landing == false);
         let base = word_ref.get_cousin(nested.segment_id, nested.offset + 1);
         let tag_word = landing.get_sibling(1, 1);
-        let pointer = Pointer::try_from(*tag_word.get(0).unwrap())?;
-        Reader::new_local(pointer, base)
+        let Pointer::Local(local) =Pointer::try_from(*tag_word.get(0).unwrap())?  else {
+            unreachable!()
+        };
+        Reader::new_local(local, base)
     } else {
-        let pointer = Pointer::try_from(*landing)?;
-        Reader::new_local(pointer, landing.get_next())
+        let Pointer::Local(local) = Pointer::try_from(*landing)? else {
+            unreachable!();
+        };
+        Reader::new_local(local, landing.get_next())
     }
 }
