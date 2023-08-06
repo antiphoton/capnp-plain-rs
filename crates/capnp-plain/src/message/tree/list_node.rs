@@ -72,3 +72,21 @@ impl ListNode {
         }
     }
 }
+
+impl std::fmt::Debug for ListNode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Scalar {
+                scalar_size,
+                list_len,
+                data,
+            } => f
+                .debug_struct("ScalarList")
+                .field("len", list_len)
+                .field("scalar", scalar_size)
+                .field("data", data)
+                .finish(),
+            Self::Composite(a) => f.debug_list().entries(a).finish(),
+        }
+    }
+}

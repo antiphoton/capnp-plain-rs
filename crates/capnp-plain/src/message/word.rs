@@ -13,3 +13,10 @@ impl TryFrom<&[u8]> for Word {
         Ok(Word(*a))
     }
 }
+
+impl std::fmt::Debug for Word {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let a: Vec<_> = self.0.iter().map(|x| format!("{:02x}", x)).collect();
+        write!(f, "[{}]", a.join(" "))
+    }
+}
