@@ -45,3 +45,26 @@ impl StructNode {
         }
     }
 }
+
+struct ChildrenDebugHelper<'a>(&'a Vec<Option<Node>>);
+
+impl<'a> std::fmt::Debug for ChildrenDebugHelper<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut map = f.debug_map();
+        for (i, x) in self.0.iter().enumerate() {
+            if let Some(x) = x {
+                map.entry(&i, x);
+            }
+        }
+        map.finish()
+    }
+}
+
+impl std::fmt::Debug for StructNode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("StructNode")
+            .field("data", &self.data)
+            .field("children", &ChildrenDebugHelper(&self.children))
+            .finish()
+    }
+}
