@@ -4,10 +4,9 @@ pub mod struct_pointer;
 
 use anyhow::{ensure, Error, Result};
 
-use crate::message::word::word_ref::WordRef;
-use crate::message::word::Word;
+use crate::message::word::{word_ref::WordRef, Word};
 
-use self::far_pointer::{read_far_pointer, FarPointerOld};
+use self::far_pointer::{read_far_pointer, FarPointer, FarPointerOld};
 use self::list_pointer::{ListPointer, ListReader};
 use self::struct_pointer::{StructPointer, StructReader};
 
@@ -16,12 +15,33 @@ pub enum LocalPointer {
     List(ListPointer),
 }
 
-pub enum Pointer {
+pub enum PointerOld {
     Local(LocalPointer),
     Far(FarPointerOld),
 }
 
-impl TryFrom<Word> for Pointer {
+impl LocalPointer {
+    pub fn read(word_ref: WordRef) -> Result<(LocalPointer, WordRef)> {
+        let y = match word_ref.0[0] % 4 {
+            0 => {
+                let p = StructPointer::try_from(*word_ref)?;
+                (LocalPointer::Struct(p), word_ref.get_next())
+            }
+            1 => {
+                let p = ListPointer::try_from(*word_ref)?;
+                (LocalPointer::List(p), word_ref.get_next())
+            }
+            2 => {
+                let far_pointer = FarPointer::new(word_ref)?;
+                far_pointer.read()?
+            }
+            _ => todo!(),
+        };
+        Ok(y)
+    }
+}
+
+impl TryFrom<Word> for PointerOld {
     type Error = Error;
     fn try_from(Word(a): Word) -> Result<Self, Self::Error> {
         let pointer = match a[0] % 4 {
@@ -48,10 +68,10 @@ impl<'a> Reader<'a> {
         Ok(reader)
     }
     pub fn new(word_ref: WordRef<'a>) -> Result<Self> {
-        let pointer = Pointer::try_from(*word_ref)?;
+        let pointer = PointerOld::try_from(*word_ref)?;
         match pointer {
-            Pointer::Far(_) => read_far_pointer(word_ref),
-            Pointer::Local(local) => Self::new_local(local, word_ref.get_next()),
+            PointerOld::Far(_) => read_far_pointer(word_ref),
+            PointerOld::Local(local) => Self::new_local(local, word_ref.get_next()),
         }
     }
     pub fn into_struct_reader(self) -> Result<StructReader<'a>> {

@@ -1,4 +1,5 @@
 pub mod segment;
+pub mod tree;
 pub mod word;
 
 use anyhow::Result;
