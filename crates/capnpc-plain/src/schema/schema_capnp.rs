@@ -5,8 +5,7 @@
 #![allow(unused)]
 use anyhow::Result;
 use capnp_plain::{
-    message::tree::struct_node::StructNode as CapnpStructNode,
-    pointer::struct_pointer::{CapnpPlainStruct, StructReader},
+    message::tree::struct_node::StructNode as CapnpStructNode, CapnpPlainStruct,
 };
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;

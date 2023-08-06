@@ -18,9 +18,6 @@ impl<'a> WordSlice<'a> {
             length,
         }
     }
-    pub fn clone_ref(&self) -> Self {
-        Self::new(self.message, self.segment_id, self.offset, self.length)
-    }
     pub fn copy_to_owned(&self) -> Vec<Word> {
         let segment = &self.message.segments[self.segment_id];
         let slice = &segment.words[self.offset..(self.offset + self.length)];

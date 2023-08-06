@@ -402,10 +402,7 @@ pub fn compile(code_generator_request: &CodeGeneratorRequest) -> Result<()> {
         #![allow(non_camel_case_types)]
         #![allow(unused)]
         use anyhow::Result;
-        use capnp_plain::{
-            message::tree::struct_node::StructNode as CapnpStructNode,
-            pointer::struct_pointer::{CapnpPlainStruct, StructReader},
-        };
+        use capnp_plain::{message::tree::struct_node::StructNode as CapnpStructNode, CapnpPlainStruct};
         use num_derive::FromPrimitive;
         use num_traits::FromPrimitive;
         use serde::{Deserialize, Serialize};

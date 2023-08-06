@@ -21,7 +21,7 @@ use crate::{
     pointer::PointerOld,
 };
 
-use super::{get_offset_bits, LocalPointer, Reader};
+use super::{get_offset_bits, LocalPointer};
 
 #[derive(Debug)]
 pub struct FarPointerOld {
@@ -88,30 +88,5 @@ impl<'a> FarPointer<'a> {
         };
             Ok((local, landing.get_next()))
         }
-    }
-}
-
-pub fn read_far_pointer(word_ref: WordRef) -> Result<Reader> {
-    let FarPointerOld {
-        double_landing,
-        offset,
-        segment_id,
-    } = FarPointerOld::try_from(*word_ref)?;
-    let landing = word_ref.get_cousin(segment_id, offset);
-    ensure!(landing.0[0] % 4 != 2);
-    if double_landing {
-        let nested = FarPointerOld::try_from(*landing)?;
-        ensure!(nested.double_landing == false);
-        let base = word_ref.get_cousin(nested.segment_id, nested.offset + 1);
-        let tag_word = landing.get_sibling(1, 1);
-        let PointerOld::Local(local) =PointerOld::try_from(*tag_word.get(0).unwrap())?  else {
-            unreachable!()
-        };
-        Reader::new_local(local, base)
-    } else {
-        let PointerOld::Local(local) = PointerOld::try_from(*landing)? else {
-            unreachable!();
-        };
-        Reader::new_local(local, landing.get_next())
     }
 }

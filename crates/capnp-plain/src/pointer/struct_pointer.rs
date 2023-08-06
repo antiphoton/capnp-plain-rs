@@ -11,19 +11,9 @@
 //! D (16 bits) = Size of the struct's pointer section, in words.
 //! ```
 
-mod primitive_reader;
-
 use anyhow::{Error, Result};
 
-use crate::{
-    message::{
-        tree::struct_node::StructNode,
-        word::{word_ref::WordRef, word_slice::WordSlice, Word},
-    },
-    pointer::get_offset_bits,
-};
-
-use super::{list_pointer::ListReader, Reader};
+use crate::{message::word::Word, pointer::get_offset_bits};
 
 #[derive(Clone)]
 pub struct StructPointer {
@@ -45,68 +35,4 @@ impl TryFrom<Word> for StructPointer {
         };
         Ok(pointer)
     }
-}
-
-pub struct StructReader<'a> {
-    data: WordSlice<'a>,
-    pointers: WordSlice<'a>,
-}
-
-impl<'a> StructReader<'a> {
-    pub fn new(pointer: StructPointer, content_base: WordRef<'a>) -> Result<Self> {
-        let StructPointer {
-            offset,
-            data_size,
-            pointer_size,
-        } = pointer;
-        let data = content_base.get_sibling(offset, data_size);
-        let pointers = content_base.get_sibling(offset + data_size as isize, pointer_size);
-        let reader = StructReader { data, pointers };
-        Ok(reader)
-    }
-    pub fn clone_ref(&self) -> Self {
-        Self {
-            data: self.data.clone_ref(),
-            pointers: self.pointers.clone_ref(),
-        }
-    }
-    pub fn read_pointer(&self, offset: u32) -> Result<Reader<'_>> {
-        let x = self
-            .pointers
-            .get(offset as usize)
-            .ok_or_else(|| Error::msg("out of bound"))?;
-        Reader::new(x)
-    }
-    pub fn read_struct_child<T: CapnpPlainStruct>(&self, offset: u32) -> Result<T> {
-        let reader = self.read_pointer(offset)?.into_struct_reader()?;
-        T::try_from_reader(reader)
-    }
-    pub fn read_text_field(&self, offset: u32) -> String {
-        let mut bytes = self.read_list_field(offset, |r| r.read_u8_children());
-        let terminator = bytes.pop();
-        if terminator != Some(0) {
-            return "".to_string();
-        }
-        String::from_utf8(bytes).unwrap_or_default()
-    }
-    pub fn read_list_field<T>(
-        &self,
-        offset: u32,
-        f: impl FnOnce(ListReader) -> Result<Vec<T>>,
-    ) -> Vec<T> {
-        let Ok(p) = self.read_pointer(offset) else {
-            return Vec::with_capacity(0);
-        };
-        let Ok(p) = p.into_list_reader() else {
-            return Vec::with_capacity(0);
-        };
-        f(p).unwrap_or_else(|_| Vec::with_capacity(0))
-    }
-}
-
-pub trait CapnpPlainStruct: Sized {
-    fn try_from_reader(_reader: StructReader) -> Result<Self> {
-        todo!()
-    }
-    fn from_node(_node: &StructNode) -> Self;
 }

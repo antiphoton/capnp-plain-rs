@@ -4,8 +4,9 @@ use crate::{
     message::word::{word_ref::WordRef, Word},
     pointer::{
         list_pointer::{ElementSize, ListPointer, ScalarSize},
-        struct_pointer::{CapnpPlainStruct, StructPointer},
+        struct_pointer::StructPointer,
     },
+    CapnpPlainStruct,
 };
 
 use super::struct_node::StructNode;

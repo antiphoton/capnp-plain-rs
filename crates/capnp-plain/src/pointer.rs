@@ -6,9 +6,9 @@ use anyhow::{ensure, Error, Result};
 
 use crate::message::word::{word_ref::WordRef, Word};
 
-use self::far_pointer::{read_far_pointer, FarPointer, FarPointerOld};
-use self::list_pointer::{ListPointer, ListReader};
-use self::struct_pointer::{StructPointer, StructReader};
+use self::far_pointer::{FarPointer, FarPointerOld};
+use self::list_pointer::ListPointer;
+use self::struct_pointer::StructPointer;
 
 pub enum LocalPointer {
     Struct(StructPointer),
@@ -51,40 +51,6 @@ impl TryFrom<Word> for PointerOld {
             _ => todo!(),
         };
         Ok(pointer)
-    }
-}
-
-pub enum Reader<'a> {
-    Struct(StructReader<'a>),
-    List(ListReader<'a>),
-}
-
-impl<'a> Reader<'a> {
-    pub fn new_local(pointer: LocalPointer, content_base: WordRef<'a>) -> Result<Self> {
-        let reader = match pointer {
-            LocalPointer::Struct(p) => Self::Struct(StructReader::new(p, content_base)?),
-            LocalPointer::List(p) => Self::List(ListReader::new(p, content_base)?),
-        };
-        Ok(reader)
-    }
-    pub fn new(word_ref: WordRef<'a>) -> Result<Self> {
-        let pointer = PointerOld::try_from(*word_ref)?;
-        match pointer {
-            PointerOld::Far(_) => read_far_pointer(word_ref),
-            PointerOld::Local(local) => Self::new_local(local, word_ref.get_next()),
-        }
-    }
-    pub fn into_struct_reader(self) -> Result<StructReader<'a>> {
-        match self {
-            Self::Struct(x) => Ok(x),
-            _ => Err(Error::msg("not a struct pointer")),
-        }
-    }
-    pub fn into_list_reader(self) -> Result<ListReader<'a>> {
-        match self {
-            Self::List(x) => Ok(x),
-            _ => Err(Error::msg("not a list pointer")),
-        }
     }
 }
 

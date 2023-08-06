@@ -5,8 +5,7 @@ pub mod word;
 use anyhow::Result;
 
 use crate::{
-    message::word::word_slice::WordSlice, pointer::struct_pointer::CapnpPlainStruct,
-    util::split_array::split_array_ref,
+    message::word::word_slice::WordSlice, util::split_array::split_array_ref, CapnpPlainStruct,
 };
 
 use self::{segment::Segment, tree::Node, word::word_ref::WordRef};
