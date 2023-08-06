@@ -3,7 +3,7 @@ pub mod word_slice;
 
 use anyhow::Error;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct Word(pub [u8; 8]);
 
 impl TryFrom<&[u8]> for Word {

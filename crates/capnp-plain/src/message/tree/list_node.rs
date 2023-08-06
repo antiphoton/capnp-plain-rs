@@ -1,4 +1,5 @@
 mod primitive_reader;
+mod primitive_writer;
 
 use crate::{
     message::word::{word_ref::WordRef, Word},

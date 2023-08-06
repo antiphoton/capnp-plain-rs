@@ -51,7 +51,7 @@ impl ListNode {
                 }
                 result
             }
-            _ => todo!(),
+            _ => vec![],
         }
     }
 }

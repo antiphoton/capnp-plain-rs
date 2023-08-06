@@ -58,7 +58,7 @@ impl StructNode {
     pub fn read_bool(&self, offset: u32, default_value: bool) -> bool {
         let offset = offset as usize;
         let i = offset / 64;
-        let Some(word) = self.data.get(i)  else {
+        let Some(word) = self.data.get(i) else {
             return default_value;
         };
         let j = (offset % 64) / 8;
