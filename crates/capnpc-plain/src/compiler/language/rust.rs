@@ -72,21 +72,6 @@ fn define_type(context: &CompilerContext, ty: &Type, is_box: bool) -> Option<Tok
     Some(r)
 }
 
-fn read_list_old(_context: &CompilerContext, offset: u32, ty: &Type) -> Option<TokenStream> {
-    let callback = match ty {
-        Type::Bool => quote!(|r| r.read_bool_children()),
-        Type::Int8 => quote!(|r| r.read_i8_children()),
-        Type::Uint8 => quote!(|r| r.read_u8_children()),
-        Type::Struct(_) => {
-            quote!(|r| r.read_struct_children())
-        }
-        _ => return None,
-    };
-    let reader = format_ident!("reader");
-    let r = quote!(#reader.read_list_field(#offset, #callback));
-    Some(r)
-}
-
 fn read_list(_context: &CompilerContext, offset: u32, ty: &Type) -> Option<TokenStream> {
     let callback = match ty {
         Type::Bool => quote!(|r| r.read_bool_children()),
@@ -99,74 +84,6 @@ fn read_list(_context: &CompilerContext, offset: u32, ty: &Type) -> Option<Token
     };
     let reader = format_ident!("reader");
     let r = quote!(#reader.read_list(#offset, #callback));
-    Some(r)
-}
-
-fn read_slot_old(
-    context: &CompilerContext,
-    slot: &Field__Slot,
-    is_box: bool,
-) -> Option<TokenStream> {
-    let Some(ty) = slot.r#type.as_deref() else {
-        return None;
-    };
-    let reader = format_ident!("reader");
-    let offset = slot.offset;
-    let default_value = slot.default_value.as_deref().unwrap_or(&Value::Void);
-    let r = match (ty, default_value) {
-        (Type::Void, _) => quote!(()),
-        (Type::Bool, Value::Bool(x)) => quote!(#reader.read_bool(#offset, #x)),
-        (Type::Bool, _) => quote!(#reader.read_bool(#offset, false)),
-        (Type::Int8, Value::Int8(x)) => quote!(#reader.read_i8(#offset, #x)),
-        (Type::Int8, _) => quote!(#reader.read_i8(#offset, 0)),
-        (Type::Int16, Value::Int16(x)) => quote!(#reader.read_i16(#offset, #x)),
-        (Type::Int16, _) => quote!(#reader.read_i16(#offset, 0)),
-        (Type::Int32, Value::Int32(x)) => quote!(#reader.read_i32(#offset, #x)),
-        (Type::Int32, _) => quote!(#reader.read_i32(#offset, 0)),
-        (Type::Int64, Value::Int64(x)) => quote!(#reader.read_i64(#offset, #x)),
-        (Type::Int64, _) => quote!(#reader.read_i64(#offset, 0)),
-        (Type::Uint8, Value::Uint8(x)) => quote!(#reader.read_u8(#offset, #x)),
-        (Type::Uint8, _) => quote!(#reader.read_u8(#offset, 0)),
-        (Type::Uint16, Value::Uint16(x)) => quote!(#reader.read_u16(#offset, #x)),
-        (Type::Uint16, _) => quote!(#reader.read_u16(#offset, 0)),
-        (Type::Uint32, Value::Uint32(x)) => quote!(#reader.read_u32(#offset, #x)),
-        (Type::Uint32, _) => quote!(#reader.read_u32(#offset, 0)),
-        (Type::Uint64, Value::Uint64(x)) => quote!(#reader.read_u64(#offset, #x)),
-        (Type::Uint64, _) => quote!(#reader.read_u64(#offset, 0)),
-        (Type::Text, _) => {
-            quote!(#reader.read_text_field(#offset))
-        }
-        (Type::Struct(type_struct), _) => {
-            let Some(node) = context.get_node(type_struct.type_id) else {
-                return None;
-            };
-            let name = format_ident!("{}", context.get_full_name(node));
-            let r = quote!(#reader.read_struct_child::<#name>(#offset));
-            if is_box {
-                quote!(#r.ok().map(Box::new))
-            } else {
-                quote!(#r?)
-            }
-        }
-        (Type::List(type_list), _) => {
-            let Some(ty) = type_list.element_type.as_deref() else {
-                return None;
-            };
-            read_list_old(context, offset, ty)?
-        }
-        (Type::Enum(type_enum), default_value) => {
-            let default_value = match default_value {
-                Value::Enum(x) => *x,
-                _ => 0,
-            };
-            let Some(node) = context.get_node(type_enum.type_id) else {
-                return None;
-            };
-            let name = format_ident!("{}", context.get_full_name(node));
-            quote!(#name::decode(#reader.read_u16(#offset, #default_value)))
-        }
-        _ => return None,
-    };
     Some(r)
 }
 
@@ -267,30 +184,6 @@ fn generate_common_struct(
             }
         })
         .collect();
-    let parsers_old: Vec<_> = fields
-        .iter()
-        .filter_map(|field| {
-            if field.0.discriminant_value != 0xffff {
-                return None;
-            }
-            let name = field_ident(&field.0.name);
-            match &field.1 {
-                Field_1::Slot(slot) => {
-                    let p = read_slot_old(context, slot, true)?;
-                    Some(quote! {
-                        #name: #p,
-                    })
-                }
-                Field_1::Group(group) => {
-                    let node = context.get_node(group.type_id)?;
-                    let ty = context.get_full_name(node);
-                    let ty = format_ident!("{}", ty);
-                    Some(quote!(#name: #ty::try_from_reader(reader)?))
-                }
-                _ => None,
-            }
-        })
-        .collect();
     let parsers: Vec<_> = fields
         .iter()
         .filter_map(|field| {
@@ -321,13 +214,6 @@ fn generate_common_struct(
             #(#definitions)*
         }
         impl CapnpPlainStruct for #name {
-            fn try_from_reader(reader: StructReader) -> Result<Self> {
-                let value = #name {
-                    #(#parsers_old)*
-                };
-                Ok(value)
-            }
-
             fn from_node(reader: &CapnpStructNode) -> Self {
                 #name {
                     #(#parsers)*
@@ -372,33 +258,6 @@ fn generate_variant_struct(
             }
         })
         .collect();
-    let arms_old: Vec<_> = fields
-        .iter()
-        .filter_map(|(i, field)| {
-            let field_name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
-            match &field.1 {
-                Field_1::Slot(slot) => {
-                    let ty = slot.r#type.as_ref().unwrap();
-                    if ty == &Box::new(Type::Void) {
-                        return Some(quote! {
-                            #i => Self::#field_name,
-                        });
-                    };
-                    let p = read_slot_old(context, slot, false)?;
-                    Some(quote! {
-                        #i => Self::#field_name(#p),
-                    })
-                }
-                Field_1::Group(group) => {
-                    let node = context.get_node(group.type_id)?;
-                    let ty = context.get_full_name(node);
-                    let ty = format_ident!("{}", ty);
-                    Some(quote!( #i => Self::#field_name (#ty::try_from_reader(reader)?),))
-                }
-                _ => None,
-            }
-        })
-        .collect();
     let arms: Vec<_> = fields
         .iter()
         .filter_map(|(i, field)| {
@@ -436,13 +295,6 @@ fn generate_variant_struct(
         }
 
         impl CapnpPlainStruct for #name {
-            fn try_from_reader(reader: StructReader) -> Result<Self> {
-                let value = match reader.read_u16(#discriminant_offset, 0) {
-                    #(#arms_old)*
-                    _ => Self::UnknownDiscriminant,
-                };
-                Ok(value)
-            }
             fn from_node(reader: &CapnpStructNode) -> Self {
                 match reader.read_u16(#discriminant_offset, 0) {
                     #(#arms)*
@@ -480,12 +332,6 @@ fn generate_node_struct(
             pub struct #total(pub #common_name, pub #variant_name);
 
             impl CapnpPlainStruct for #total {
-                fn try_from_reader(reader: StructReader) -> Result<Self> {
-                    Ok(#total(
-                        #common_name::try_from_reader(reader.clone_ref())?,
-                        #variant_name::try_from_reader(reader)?,
-                    ))
-                }
                 fn from_node(reader: &CapnpStructNode) -> Self {
                     #total(
                         #common_name::from_node(reader),

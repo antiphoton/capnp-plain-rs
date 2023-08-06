@@ -105,8 +105,8 @@ impl<'a> StructReader<'a> {
 }
 
 pub trait CapnpPlainStruct: Sized {
-    fn try_from_reader(reader: StructReader) -> Result<Self>;
-    fn from_node(_node: &StructNode) -> Self {
+    fn try_from_reader(_reader: StructReader) -> Result<Self> {
         todo!()
     }
+    fn from_node(_node: &StructNode) -> Self;
 }
