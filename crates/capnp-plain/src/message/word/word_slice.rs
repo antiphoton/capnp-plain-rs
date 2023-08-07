@@ -18,10 +18,12 @@ impl<'a> WordSlice<'a> {
             length,
         }
     }
-    pub fn copy_to_owned(&self) -> Vec<Word> {
+    fn get_raw(&self) -> &[Word] {
         let segment = &self.message.segments[self.segment_id];
-        let slice = &segment.words[self.offset..(self.offset + self.length)];
-        slice.to_owned()
+        &segment.words[self.offset..(self.offset + self.length)]
+    }
+    pub fn copy_to_owned(&self) -> Vec<Word> {
+        self.get_raw().to_owned()
     }
     pub fn get(&self, offset: usize) -> Option<WordRef> {
         if offset < self.length {
@@ -34,38 +36,19 @@ impl<'a> WordSlice<'a> {
             None
         }
     }
-    pub fn dump(&self, indent: usize) {
-        const WORDS_PER_LINE: usize = 2;
-        let tab = " ".repeat(indent);
-        let lines = {
-            let segment = &self.message.segments[self.segment_id];
-            let slice = &segment.words[self.offset..(self.offset + self.length)];
-            slice.chunks(WORDS_PER_LINE)
-        };
-        for line in lines {
-            print!("{}", tab);
-            for word in line {
-                for x in word.0 {
-                    print!("{:02x} ", x);
-                }
-                print!(" ");
-            }
-            for _ in line.len()..WORDS_PER_LINE {
-                for _ in 0..25 {
-                    print!(" ");
-                }
-            }
-            for word in line {
-                for x in word.0 {
-                    if (0x21..=0x7e).contains(&x) {
-                        print!("{}", x as char);
-                    } else {
-                        print!(".");
-                    }
-                }
-                print!(" ");
-            }
-            println!();
-        }
+}
+
+impl<'a> std::fmt::Debug for WordSlice<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let location = format!(
+            "[{}][{}:{}]",
+            self.segment_id,
+            self.offset,
+            self.offset + self.length
+        );
+        f.debug_struct("WordSlice")
+            .field("location", &location)
+            .field("data", &self.get_raw())
+            .finish()
     }
 }

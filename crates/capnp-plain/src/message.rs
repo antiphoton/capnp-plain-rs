@@ -4,9 +4,7 @@ pub mod word;
 
 use anyhow::Result;
 
-use crate::{
-    message::word::word_slice::WordSlice, util::split_array::split_array_ref, CapnpPlainStruct,
-};
+use crate::{util::split_array::split_array_ref, CapnpPlainStruct};
 
 use self::{segment::Segment, tree::Node, word::word_ref::WordRef};
 
@@ -41,18 +39,18 @@ impl Message {
             _ => todo!(),
         }
     }
-    pub fn dump(&self, indent: usize) {
-        let tab = " ".repeat(indent);
-        for (i, segment) in self.segments.iter().enumerate() {
-            println!("{} Segment {}", tab, i);
-            let slice = WordSlice::new(self, i, 0, segment.words.len());
-            slice.dump(indent + 2);
-        }
-    }
 }
 
 fn take_u32(bytes: &mut &[u8]) -> u32 {
     let value;
     (value, *bytes) = split_array_ref(bytes);
     u32::from_le_bytes(*value)
+}
+
+impl std::fmt::Debug for Message {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_list()
+            .entries(self.segments.iter().map(|x| &x.words))
+            .finish()
+    }
 }
