@@ -30,12 +30,11 @@ impl ListNode {
     pub fn write_bool_children(input: Vec<bool>) -> Self {
         let list_len = input.len();
         let mut output = [Word::default()].repeat((list_len + 63) / 64);
-        for index in 0..list_len {
+        for (index, input_item) in input.iter().enumerate() {
             let i = index / 64;
             let j = (index % 64) / 8;
             let k = index % 8;
-
-            if input[index] {
+            if *input_item {
                 output[i].0[j] |= 1 << k;
             }
         }

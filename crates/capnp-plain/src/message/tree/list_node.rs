@@ -72,6 +72,10 @@ impl ListNode {
             _ => vec![],
         }
     }
+    pub fn write_struct_children<T: CapnpPlainStruct>(children: &[T]) -> Self {
+        let children: Vec<_> = children.iter().map(|x| x.to_node()).collect();
+        Self::Composite(children)
+    }
 }
 
 impl std::fmt::Debug for ListNode {

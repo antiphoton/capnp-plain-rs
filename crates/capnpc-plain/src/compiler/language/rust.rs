@@ -151,6 +151,76 @@ fn read_slot(context: &CompilerContext, slot: &Field__Slot, is_box: bool) -> Opt
     Some(r)
 }
 
+fn write_list(offset: u32, ty: &Type, value: TokenStream) -> Option<TokenStream> {
+    let value = match ty {
+        Type::Struct(_) => {
+            quote!(CapnpListNode::write_struct_children(&#value))
+        }
+        _ => return None,
+    };
+    let writer = format_ident!("writer");
+    let r = quote!(#writer.write_child(#offset, CapnpNode::List(#value)););
+    Some(r)
+}
+
+fn write_slot(slot: &Field__Slot, value: TokenStream, is_box: bool) -> Option<TokenStream> {
+    let Some(ty) = slot.r#type.as_deref() else {
+        return None;
+    };
+    let writer = format_ident!("writer");
+    let offset = slot.offset;
+    let default_value = slot.default_value.as_deref().unwrap_or(&Value::Void);
+    let r = match (ty, default_value) {
+        (Type::Bool, Value::Bool(x)) => quote!(#writer.write_bool(#offset, #value, #x);),
+        (Type::Bool, _) => quote!(#writer.write_bool(#offset, #value, false);),
+        (Type::Int8, Value::Int8(x)) => quote!(#writer.write_i8(#offset, #value, #x);),
+        (Type::Int8, _) => quote!(#writer.write_i8(#offset, #value, 0);),
+        (Type::Int16, Value::Int16(x)) => quote!(#writer.write_i16(#offset, #value, #x);),
+        (Type::Int16, _) => quote!(#writer.write_i16(#offset, #value, 0);),
+        (Type::Int32, Value::Int32(x)) => quote!(#writer.write_i32(#offset, #value, #x);),
+        (Type::Int32, _) => quote!(#writer.write_i32(#offset, #value, 0);),
+        (Type::Int64, Value::Int64(x)) => quote!(#writer.write_i64(#offset, #value, #x);),
+        (Type::Int64, _) => quote!(#writer.write_i64(#offset, #value, 0);),
+        (Type::Uint8, Value::Uint8(x)) => quote!(#writer.write_u8(#offset, #value, #x);),
+        (Type::Uint8, _) => quote!(#writer.write_u8(#offset, #value, 0);),
+        (Type::Uint16, Value::Uint16(x)) => quote!(#writer.write_u16(#offset, #value, #x);),
+        (Type::Uint16, _) => quote!(#writer.write_u16(#offset, #value, 0);),
+        (Type::Uint32, Value::Uint32(x)) => quote!(#writer.write_u32(#offset, #value, #x);),
+        (Type::Uint32, _) => quote!(#writer.write_u32(#offset, #value, 0);),
+        (Type::Uint64, Value::Uint64(x)) => quote!(#writer.write_u64(#offset, #value, #x);),
+        (Type::Uint64, _) => quote!(#writer.write_u64(#offset, #value, 0);),
+        (Type::Text, _) => {
+            quote!(#writer.write_text(#offset, &#value);)
+        }
+        (Type::Struct(_type_struct), _) => {
+            if is_box {
+                quote! {
+                    if let Some(child) = &#value {
+                        #writer.write_child(#offset, CapnpNode::Struct(child.to_node()));
+                    }
+                }
+            } else {
+                quote! {}
+            }
+        }
+        (Type::List(type_list), _) => {
+            let Some(ty) = type_list.element_type.as_deref() else {
+                return None;
+            };
+            write_list(offset, ty, value)?
+        }
+        (Type::Enum(_type_enum), default_value) => {
+            let default_value = match default_value {
+                Value::Enum(x) => *x,
+                _ => 0,
+            };
+            quote!(#writer.write_u16(#offset, #value as u16, #default_value);)
+        }
+        _ => return None,
+    };
+    Some(r)
+}
+
 fn generate_common_struct(
     context: &CompilerContext,
     name: &Ident,
@@ -208,6 +278,20 @@ fn generate_common_struct(
             }
         })
         .collect();
+    let updaters: Vec<_> = fields
+        .iter()
+        .filter_map(|field| {
+            if field.0.discriminant_value != 0xffff {
+                return None;
+            }
+            let name = field_ident(&field.0.name);
+            match &field.1 {
+                Field_1::Slot(slot) => Some(write_slot(slot, quote!(self.#name), true)?),
+                _ => None,
+            }
+        })
+        .collect();
+
     let delcaration = quote! {
         #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
         pub struct #name {
@@ -218,6 +302,9 @@ fn generate_common_struct(
                 #name {
                     #(#parsers)*
                 }
+            }
+            fn update_node(&self, writer: &mut CapnpStructNode) {
+                #(#updaters)*
             }
         }
     };
@@ -258,7 +345,7 @@ fn generate_variant_struct(
             }
         })
         .collect();
-    let arms: Vec<_> = fields
+    let parsers: Vec<_> = fields
         .iter()
         .filter_map(|(i, field)| {
             let field_name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
@@ -279,8 +366,45 @@ fn generate_variant_struct(
                     let node = context.get_node(group.type_id)?;
                     let ty = context.get_full_name(node);
                     let ty = format_ident!("{}", ty);
-                    Some(quote!( #i => Self::#field_name (#ty::from_node(reader)),))
+                    Some(quote! {
+                        #i => Self::#field_name (#ty::from_node(reader)),
+                    })
                 }
+                _ => None,
+            }
+        })
+        .collect();
+    let writers: Vec<_> = fields
+        .iter()
+        .filter_map(|(i, field)| {
+            let field_name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
+            match &field.1 {
+                Field_1::Slot(slot) => {
+                    let ty = slot.r#type.as_ref().unwrap();
+                    if ty == &Box::new(Type::Void) {
+                        return Some(quote! {
+                            Self::#field_name => #i,
+                        });
+                    };
+                    if let Some(p) = write_slot(slot, quote!(*value), false) {
+                        Some(quote! {
+                            Self::#field_name(value) => {
+                                #p
+                                #i
+                            }
+                        })
+                    } else {
+                        Some(quote! {
+                            Self::#field_name(..) => #i,
+                        })
+                    }
+                }
+                Field_1::Group(_group) => Some(quote! {
+                    Self::#field_name(value) => {
+                        value.update_node(writer);
+                        #i
+                    }
+                }),
                 _ => None,
             }
         })
@@ -297,9 +421,16 @@ fn generate_variant_struct(
         impl CapnpPlainStruct for #name {
             fn from_node(reader: &CapnpStructNode) -> Self {
                 match reader.read_u16(#discriminant_offset, 0) {
-                    #(#arms)*
+                    #(#parsers)*
                     _ => Self::UnknownDiscriminant,
                 }
+            }
+            fn update_node(&self, writer: &mut CapnpStructNode) {
+                let discriminant_value = match self {
+                    #(#writers)*
+                    _ => {return;},
+                };
+                writer.write_u16(#discriminant_offset, discriminant_value, 0);
             }
         }
     };
@@ -338,6 +469,10 @@ fn generate_node_struct(
                         #variant_name::from_node(reader),
                     )
                 }
+                fn update_node(&self, writer: &mut CapnpStructNode) {
+                    self.0.update_node(writer);
+                    self.1.update_node(writer);
+                }
             }
         }
     }
@@ -356,7 +491,7 @@ fn generate_node_enum(name: &str, node_enum: &Node__Enum) -> TokenStream {
     let name = format_ident!("{}", name);
     let max = node_enum.enumerants.len() as u16 - 1;
     quote!(
-        #[derive(Debug, Clone, PartialEq, FromPrimitive, Serialize, Deserialize)]
+        #[derive(Debug, Clone, Copy, PartialEq, FromPrimitive, Serialize, Deserialize)]
         pub enum #name {
             #(#definitions)*
             UnknownEnumerant,
@@ -402,7 +537,13 @@ pub fn compile(code_generator_request: &CodeGeneratorRequest) -> Result<()> {
         #![allow(non_camel_case_types)]
         #![allow(unused)]
         use anyhow::Result;
-        use capnp_plain::{message::tree::struct_node::StructNode as CapnpStructNode, CapnpPlainStruct};
+        use capnp_plain::{
+            message::tree::{
+                list_node::ListNode as CapnpListNode, struct_node::StructNode as CapnpStructNode,
+                Node as CapnpNode,
+            },
+            CapnpPlainStruct,
+        };
         use num_derive::FromPrimitive;
         use num_traits::FromPrimitive;
         use serde::{Deserialize, Serialize};
