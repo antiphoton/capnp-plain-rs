@@ -1,0 +1,19 @@
+name: Unit Tests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/cache-cargo
+      - uses: actions-rs/toolchain@v1
+        with:
+            toolchain: stable
+      - run: cargo test
+        working-directory: crates
