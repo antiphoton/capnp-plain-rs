@@ -40,7 +40,15 @@ impl<'a> WordRef<'a> {
     pub fn get_cousin(&self, segment_id: usize, offset: usize) -> Self {
         Self::new(self.message, segment_id, offset)
     }
-    pub fn dump(&self, indent: usize) {
-        self.get_sibling(0, 1).dump(indent);
+}
+
+impl<'a> std::fmt::Debug for WordRef<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let location = format!("[{}][{}]", self.segment_id, self.offset,);
+        let data = self.message.segments[self.segment_id].words[self.offset];
+        f.debug_struct("WordSlice")
+            .field("location", &location)
+            .field("data", &data)
+            .finish()
     }
 }
