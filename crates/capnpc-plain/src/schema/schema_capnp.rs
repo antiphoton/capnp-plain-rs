@@ -5,12 +5,16 @@
 #![allow(unused)]
 use anyhow::Result;
 use capnp_plain::{
-    message::tree::struct_node::StructNode as CapnpStructNode, CapnpPlainStruct,
+    message::tree::{
+        list_node::ListNode as CapnpListNode, struct_node::StructNode as CapnpStructNode,
+        Node as CapnpNode,
+    },
+    CapnpPlainStruct,
 };
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
-#[derive(Debug, Clone, PartialEq, FromPrimitive, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, FromPrimitive, Serialize, Deserialize)]
 pub enum ElementSize {
     Empty = 0isize,
     Bit = 1isize,
@@ -48,6 +52,16 @@ impl CapnpPlainStruct for Field_0 {
             ordinal: Field__Ordinal::from_node(reader),
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_text(0u32, &self.name);
+        writer.write_u16(0u32, self.code_order, 0u16);
+        writer
+            .write_child(
+                1u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.annotations)),
+            );
+        writer.write_u16(1u32, self.discriminant_value, 65535u16);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "t", content = "c")]
@@ -64,12 +78,32 @@ impl CapnpPlainStruct for Field_1 {
             _ => Self::UnknownDiscriminant,
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        let discriminant_value = match self {
+            Self::Slot(value) => {
+                value.update_node(writer);
+                0u16
+            }
+            Self::Group(value) => {
+                value.update_node(writer);
+                1u16
+            }
+            _ => {
+                return;
+            }
+        };
+        writer.write_u16(4u32, discriminant_value, 0);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field(pub Field_0, pub Field_1);
 impl CapnpPlainStruct for Field {
     fn from_node(reader: &CapnpStructNode) -> Self {
         Field(Field_0::from_node(reader), Field_1::from_node(reader))
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        self.0.update_node(writer);
+        self.1.update_node(writer);
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -96,6 +130,28 @@ impl CapnpPlainStruct for Node_0 {
             is_generic: reader.read_bool(288u32, false),
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u64(0u32, self.id, 0u64);
+        writer.write_text(0u32, &self.display_name);
+        writer.write_u32(2u32, self.display_name_prefix_length, 0u32);
+        writer.write_u64(2u32, self.scope_id, 0u64);
+        writer
+            .write_child(
+                1u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.nested_nodes)),
+            );
+        writer
+            .write_child(
+                2u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.annotations)),
+            );
+        writer
+            .write_child(
+                5u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.parameters)),
+            );
+        writer.write_bool(288u32, self.is_generic, false);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "t", content = "c")]
@@ -120,12 +176,45 @@ impl CapnpPlainStruct for Node_1 {
             _ => Self::UnknownDiscriminant,
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        let discriminant_value = match self {
+            Self::File => 0u16,
+            Self::Struct(value) => {
+                value.update_node(writer);
+                1u16
+            }
+            Self::Enum(value) => {
+                value.update_node(writer);
+                2u16
+            }
+            Self::Interface(value) => {
+                value.update_node(writer);
+                3u16
+            }
+            Self::Const(value) => {
+                value.update_node(writer);
+                4u16
+            }
+            Self::Annotation(value) => {
+                value.update_node(writer);
+                5u16
+            }
+            _ => {
+                return;
+            }
+        };
+        writer.write_u16(6u32, discriminant_value, 0);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Node(pub Node_0, pub Node_1);
 impl CapnpPlainStruct for Node {
     fn from_node(reader: &CapnpStructNode) -> Self {
         Node(Node_0::from_node(reader), Node_1::from_node(reader))
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        self.0.update_node(writer);
+        self.1.update_node(writer);
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -150,6 +239,19 @@ impl CapnpPlainStruct for Node__Struct {
             fields: reader.read_list(3u32, |r| r.read_struct_children()),
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u16(7u32, self.data_word_count, 0u16);
+        writer.write_u16(12u32, self.pointer_count, 0u16);
+        writer.write_u16(13u32, self.preferred_list_encoding as u16, 0u16);
+        writer.write_bool(224u32, self.is_group, false);
+        writer.write_u16(15u32, self.discriminant_count, 0u16);
+        writer.write_u32(8u32, self.discriminant_offset, 0u32);
+        writer
+            .write_child(
+                3u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.fields)),
+            );
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Enumerant {
@@ -165,6 +267,15 @@ impl CapnpPlainStruct for Enumerant {
             annotations: reader.read_list(1u32, |r| r.read_struct_children()),
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_text(0u32, &self.name);
+        writer.write_u16(0u32, self.code_order, 0u16);
+        writer
+            .write_child(
+                1u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.annotations)),
+            );
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Node__Enum {
@@ -175,6 +286,13 @@ impl CapnpPlainStruct for Node__Enum {
         Node__Enum {
             enumerants: reader.read_list(3u32, |r| r.read_struct_children()),
         }
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer
+            .write_child(
+                3u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.enumerants)),
+            );
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -203,6 +321,30 @@ impl CapnpPlainStruct for Method {
             implicit_parameters: reader.read_list(4u32, |r| r.read_struct_children()),
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_text(0u32, &self.name);
+        writer.write_u16(0u32, self.code_order, 0u16);
+        writer.write_u64(1u32, self.param_struct_type, 0u64);
+        writer.write_u64(2u32, self.result_struct_type, 0u64);
+        writer
+            .write_child(
+                1u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.annotations)),
+            );
+        if let Some(child) = &self.param_brand {
+            writer.write_child(2u32, CapnpNode::Struct(child.to_node()));
+        }
+        if let Some(child) = &self.result_brand {
+            writer.write_child(3u32, CapnpNode::Struct(child.to_node()));
+        }
+        writer
+            .write_child(
+                4u32,
+                CapnpNode::List(
+                    CapnpListNode::write_struct_children(&self.implicit_parameters),
+                ),
+            );
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Superclass {
@@ -214,6 +356,12 @@ impl CapnpPlainStruct for Superclass {
         Superclass {
             id: reader.read_u64(0u32, 0u64),
             brand: reader.read_struct(0u32).map(|x| Box::new(Brand::from_node(x))),
+        }
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u64(0u32, self.id, 0u64);
+        if let Some(child) = &self.brand {
+            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
         }
     }
 }
@@ -228,6 +376,18 @@ impl CapnpPlainStruct for Node__Interface {
             methods: reader.read_list(3u32, |r| r.read_struct_children()),
             superclasses: reader.read_list(4u32, |r| r.read_struct_children()),
         }
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer
+            .write_child(
+                3u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.methods)),
+            );
+        writer
+            .write_child(
+                4u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.superclasses)),
+            );
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -279,6 +439,48 @@ impl CapnpPlainStruct for Type {
             _ => Self::UnknownDiscriminant,
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        let discriminant_value = match self {
+            Self::Void => 0u16,
+            Self::Bool => 1u16,
+            Self::Int8 => 2u16,
+            Self::Int16 => 3u16,
+            Self::Int32 => 4u16,
+            Self::Int64 => 5u16,
+            Self::Uint8 => 6u16,
+            Self::Uint16 => 7u16,
+            Self::Uint32 => 8u16,
+            Self::Uint64 => 9u16,
+            Self::Float32 => 10u16,
+            Self::Float64 => 11u16,
+            Self::Text => 12u16,
+            Self::Data => 13u16,
+            Self::List(value) => {
+                value.update_node(writer);
+                14u16
+            }
+            Self::Enum(value) => {
+                value.update_node(writer);
+                15u16
+            }
+            Self::Struct(value) => {
+                value.update_node(writer);
+                16u16
+            }
+            Self::Interface(value) => {
+                value.update_node(writer);
+                17u16
+            }
+            Self::AnyPointer(value) => {
+                value.update_node(writer);
+                18u16
+            }
+            _ => {
+                return;
+            }
+        };
+        writer.write_u16(0u32, discriminant_value, 0);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "t", content = "c")]
@@ -323,6 +525,66 @@ impl CapnpPlainStruct for Value {
             _ => Self::UnknownDiscriminant,
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        let discriminant_value = match self {
+            Self::Void => 0u16,
+            Self::Bool(value) => {
+                writer.write_bool(16u32, *value, false);
+                1u16
+            }
+            Self::Int8(value) => {
+                writer.write_i8(2u32, *value, 0i8);
+                2u16
+            }
+            Self::Int16(value) => {
+                writer.write_i16(1u32, *value, 0i16);
+                3u16
+            }
+            Self::Int32(value) => {
+                writer.write_i32(1u32, *value, 0i32);
+                4u16
+            }
+            Self::Int64(value) => {
+                writer.write_i64(1u32, *value, 0i64);
+                5u16
+            }
+            Self::Uint8(value) => {
+                writer.write_u8(2u32, *value, 0u8);
+                6u16
+            }
+            Self::Uint16(value) => {
+                writer.write_u16(1u32, *value, 0u16);
+                7u16
+            }
+            Self::Uint32(value) => {
+                writer.write_u32(1u32, *value, 0u32);
+                8u16
+            }
+            Self::Uint64(value) => {
+                writer.write_u64(1u32, *value, 0u64);
+                9u16
+            }
+            Self::Float32(..) => 10u16,
+            Self::Float64(..) => 11u16,
+            Self::Text(value) => {
+                writer.write_text(0u32, &*value);
+                12u16
+            }
+            Self::Data(..) => 13u16,
+            Self::List(..) => 14u16,
+            Self::Enum(value) => {
+                writer.write_u16(1u32, *value, 0u16);
+                15u16
+            }
+            Self::Struct(..) => 16u16,
+            Self::Interface => 17u16,
+            Self::AnyPointer(..) => 18u16,
+            _ => {
+                return;
+            }
+        };
+        writer.write_u16(0u32, discriminant_value, 0);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Node__Const {
@@ -334,6 +596,14 @@ impl CapnpPlainStruct for Node__Const {
         Node__Const {
             r#type: reader.read_struct(3u32).map(|x| Box::new(Type::from_node(x))),
             value: reader.read_struct(4u32).map(|x| Box::new(Value::from_node(x))),
+        }
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        if let Some(child) = &self.r#type {
+            writer.write_child(3u32, CapnpNode::Struct(child.to_node()));
+        }
+        if let Some(child) = &self.value {
+            writer.write_child(4u32, CapnpNode::Struct(child.to_node()));
         }
     }
 }
@@ -371,6 +641,23 @@ impl CapnpPlainStruct for Node__Annotation {
             targets_annotation: reader.read_bool(123u32, false),
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        if let Some(child) = &self.r#type {
+            writer.write_child(3u32, CapnpNode::Struct(child.to_node()));
+        }
+        writer.write_bool(112u32, self.targets_file, false);
+        writer.write_bool(113u32, self.targets_const, false);
+        writer.write_bool(114u32, self.targets_enum, false);
+        writer.write_bool(115u32, self.targets_enumerant, false);
+        writer.write_bool(116u32, self.targets_struct, false);
+        writer.write_bool(117u32, self.targets_field, false);
+        writer.write_bool(118u32, self.targets_union, false);
+        writer.write_bool(119u32, self.targets_group, false);
+        writer.write_bool(120u32, self.targets_interface, false);
+        writer.write_bool(121u32, self.targets_method, false);
+        writer.write_bool(122u32, self.targets_param, false);
+        writer.write_bool(123u32, self.targets_annotation, false);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Node__NestedNode {
@@ -383,6 +670,10 @@ impl CapnpPlainStruct for Node__NestedNode {
             name: reader.read_text(0u32),
             id: reader.read_u64(0u32, 0u64),
         }
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_text(0u32, &self.name);
+        writer.write_u64(0u32, self.id, 0u64);
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -399,6 +690,15 @@ impl CapnpPlainStruct for Annotation {
             brand: reader.read_struct(1u32).map(|x| Box::new(Brand::from_node(x))),
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u64(0u32, self.id, 0u64);
+        if let Some(child) = &self.value {
+            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
+        }
+        if let Some(child) = &self.brand {
+            writer.write_child(1u32, CapnpNode::Struct(child.to_node()));
+        }
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Node__Parameter {
@@ -409,6 +709,9 @@ impl CapnpPlainStruct for Node__Parameter {
         Node__Parameter {
             name: reader.read_text(0u32),
         }
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_text(0u32, &self.name);
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -421,6 +724,13 @@ impl CapnpPlainStruct for Brand {
             scopes: reader.read_list(0u32, |r| r.read_struct_children()),
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer
+            .write_child(
+                0u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.scopes)),
+            );
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Brand__Scope_0 {
@@ -431,6 +741,9 @@ impl CapnpPlainStruct for Brand__Scope_0 {
         Brand__Scope_0 {
             scope_id: reader.read_u64(0u32, 0u64),
         }
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u64(0u32, self.scope_id, 0u64);
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -448,6 +761,23 @@ impl CapnpPlainStruct for Brand__Scope_1 {
             _ => Self::UnknownDiscriminant,
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        let discriminant_value = match self {
+            Self::Bind(value) => {
+                writer
+                    .write_child(
+                        0u32,
+                        CapnpNode::List(CapnpListNode::write_struct_children(&*value)),
+                    );
+                0u16
+            }
+            Self::Inherit => 1u16,
+            _ => {
+                return;
+            }
+        };
+        writer.write_u16(4u32, discriminant_value, 0);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Brand__Scope(pub Brand__Scope_0, pub Brand__Scope_1);
@@ -457,6 +787,10 @@ impl CapnpPlainStruct for Brand__Scope {
             Brand__Scope_0::from_node(reader),
             Brand__Scope_1::from_node(reader),
         )
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        self.0.update_node(writer);
+        self.1.update_node(writer);
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -474,6 +808,16 @@ impl CapnpPlainStruct for Brand__Binding {
             _ => Self::UnknownDiscriminant,
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        let discriminant_value = match self {
+            Self::Unbound => 0u16,
+            Self::Type(value) => 1u16,
+            _ => {
+                return;
+            }
+        };
+        writer.write_u16(0u32, discriminant_value, 0);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Type__List {
@@ -483,6 +827,11 @@ impl CapnpPlainStruct for Type__List {
     fn from_node(reader: &CapnpStructNode) -> Self {
         Type__List {
             element_type: reader.read_struct(0u32).map(|x| Box::new(Type::from_node(x))),
+        }
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        if let Some(child) = &self.element_type {
+            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
         }
     }
 }
@@ -498,6 +847,12 @@ impl CapnpPlainStruct for Type__Enum {
             brand: reader.read_struct(0u32).map(|x| Box::new(Brand::from_node(x))),
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u64(1u32, self.type_id, 0u64);
+        if let Some(child) = &self.brand {
+            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
+        }
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Type__Struct {
@@ -511,6 +866,12 @@ impl CapnpPlainStruct for Type__Struct {
             brand: reader.read_struct(0u32).map(|x| Box::new(Brand::from_node(x))),
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u64(1u32, self.type_id, 0u64);
+        if let Some(child) = &self.brand {
+            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
+        }
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Type__Interface {
@@ -522,6 +883,12 @@ impl CapnpPlainStruct for Type__Interface {
         Type__Interface {
             type_id: reader.read_u64(1u32, 0u64),
             brand: reader.read_struct(0u32).map(|x| Box::new(Brand::from_node(x))),
+        }
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u64(1u32, self.type_id, 0u64);
+        if let Some(child) = &self.brand {
+            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
         }
     }
 }
@@ -544,6 +911,18 @@ impl CapnpPlainStruct for Type__AnyPointer__Unconstrained {
             _ => Self::UnknownDiscriminant,
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        let discriminant_value = match self {
+            Self::AnyKind => 0u16,
+            Self::Struct => 1u16,
+            Self::List => 2u16,
+            Self::Capability => 3u16,
+            _ => {
+                return;
+            }
+        };
+        writer.write_u16(5u32, discriminant_value, 0);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Type__AnyPointer__Parameter {
@@ -557,6 +936,10 @@ impl CapnpPlainStruct for Type__AnyPointer__Parameter {
             parameter_index: reader.read_u16(5u32, 0u16),
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u64(2u32, self.scope_id, 0u64);
+        writer.write_u16(5u32, self.parameter_index, 0u16);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Type__AnyPointer__ImplicitMethodParameter {
@@ -567,6 +950,9 @@ impl CapnpPlainStruct for Type__AnyPointer__ImplicitMethodParameter {
         Type__AnyPointer__ImplicitMethodParameter {
             parameter_index: reader.read_u16(5u32, 0u16),
         }
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u16(5u32, self.parameter_index, 0u16);
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -592,6 +978,26 @@ impl CapnpPlainStruct for Type__AnyPointer {
             _ => Self::UnknownDiscriminant,
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        let discriminant_value = match self {
+            Self::Unconstrained(value) => {
+                value.update_node(writer);
+                0u16
+            }
+            Self::Parameter(value) => {
+                value.update_node(writer);
+                1u16
+            }
+            Self::ImplicitMethodParameter(value) => {
+                value.update_node(writer);
+                2u16
+            }
+            _ => {
+                return;
+            }
+        };
+        writer.write_u16(4u32, discriminant_value, 0);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field__Slot {
@@ -611,6 +1017,16 @@ impl CapnpPlainStruct for Field__Slot {
             had_explicit_default: reader.read_bool(128u32, false),
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u32(1u32, self.offset, 0u32);
+        if let Some(child) = &self.r#type {
+            writer.write_child(2u32, CapnpNode::Struct(child.to_node()));
+        }
+        if let Some(child) = &self.default_value {
+            writer.write_child(3u32, CapnpNode::Struct(child.to_node()));
+        }
+        writer.write_bool(128u32, self.had_explicit_default, false);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field__Group {
@@ -621,6 +1037,9 @@ impl CapnpPlainStruct for Field__Group {
         Field__Group {
             type_id: reader.read_u64(2u32, 0u64),
         }
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u64(2u32, self.type_id, 0u64);
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -638,6 +1057,19 @@ impl CapnpPlainStruct for Field__Ordinal {
             _ => Self::UnknownDiscriminant,
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        let discriminant_value = match self {
+            Self::Implicit => 0u16,
+            Self::Explicit(value) => {
+                writer.write_u16(6u32, *value, 0u16);
+                1u16
+            }
+            _ => {
+                return;
+            }
+        };
+        writer.write_u16(5u32, discriminant_value, 0);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Node__SourceInfo__Member {
@@ -648,6 +1080,9 @@ impl CapnpPlainStruct for Node__SourceInfo__Member {
         Node__SourceInfo__Member {
             doc_comment: reader.read_text(0u32),
         }
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_text(0u32, &self.doc_comment);
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -664,6 +1099,15 @@ impl CapnpPlainStruct for Node__SourceInfo {
             members: reader.read_list(1u32, |r| r.read_struct_children()),
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u64(0u32, self.id, 0u64);
+        writer.write_text(0u32, &self.doc_comment);
+        writer
+            .write_child(
+                1u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.members)),
+            );
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CapnpVersion {
@@ -679,6 +1123,11 @@ impl CapnpPlainStruct for CapnpVersion {
             micro: reader.read_u8(3u32, 0u8),
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u16(0u32, self.major, 0u16);
+        writer.write_u8(2u32, self.minor, 0u8);
+        writer.write_u8(3u32, self.micro, 0u8);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CodeGeneratorRequest__RequestedFile {
@@ -693,6 +1142,15 @@ impl CapnpPlainStruct for CodeGeneratorRequest__RequestedFile {
             filename: reader.read_text(0u32),
             imports: reader.read_list(1u32, |r| r.read_struct_children()),
         }
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u64(0u32, self.id, 0u64);
+        writer.write_text(0u32, &self.filename);
+        writer
+            .write_child(
+                1u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.imports)),
+            );
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -713,6 +1171,28 @@ impl CapnpPlainStruct for CodeGeneratorRequest {
             source_info: reader.read_list(3u32, |r| r.read_struct_children()),
         }
     }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer
+            .write_child(
+                0u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.nodes)),
+            );
+        writer
+            .write_child(
+                1u32,
+                CapnpNode::List(
+                    CapnpListNode::write_struct_children(&self.requested_files),
+                ),
+            );
+        if let Some(child) = &self.capnp_version {
+            writer.write_child(2u32, CapnpNode::Struct(child.to_node()));
+        }
+        writer
+            .write_child(
+                3u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.source_info)),
+            );
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CodeGeneratorRequest__RequestedFile__Import {
@@ -725,5 +1205,9 @@ impl CapnpPlainStruct for CodeGeneratorRequest__RequestedFile__Import {
             id: reader.read_u64(0u32, 0u64),
             name: reader.read_text(0u32),
         }
+    }
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_u64(0u32, self.id, 0u64);
+        writer.write_text(0u32, &self.name);
     }
 }

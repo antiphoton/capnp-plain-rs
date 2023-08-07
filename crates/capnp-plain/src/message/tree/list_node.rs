@@ -1,4 +1,5 @@
 mod primitive_reader;
+mod primitive_writer;
 
 use crate::{
     message::word::{word_ref::WordRef, Word},
@@ -70,6 +71,10 @@ impl ListNode {
             Self::Composite(a) => a.iter().map(T::from_node).collect(),
             _ => vec![],
         }
+    }
+    pub fn write_struct_children<T: CapnpPlainStruct>(children: &[T]) -> Self {
+        let children: Vec<_> = children.iter().map(|x| x.to_node()).collect();
+        Self::Composite(children)
     }
 }
 

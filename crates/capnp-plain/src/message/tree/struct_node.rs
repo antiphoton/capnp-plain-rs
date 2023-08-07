@@ -1,4 +1,5 @@
 mod primitive_reader;
+mod primitive_writer;
 
 use crate::{
     message::word::{word_ref::WordRef, Word},
@@ -43,6 +44,11 @@ impl StructNode {
             Some(Some(Node::Struct(p))) => Some(p),
             _ => None,
         }
+    }
+    pub fn write_child(&mut self, offset: u32, child: Node) {
+        let offset = offset as usize;
+        self.children.resize_with(offset + 1, || None);
+        self.children[offset] = Some(child);
     }
 }
 

@@ -17,7 +17,11 @@ macro_rules! define_byte_reader {
                         for index in 0..*list_len {
                             let i = index / 8;
                             let j = index % 8;
-                            result.push(data.get(i).unwrap().0[j] as $t);
+                            if let Some(word) = data.get(i) {
+                                result.push(word.0[j] as $t);
+                            } else {
+                                result.push(0);
+                            }
                         }
                         result
                     }
@@ -47,11 +51,15 @@ impl ListNode {
                     let i = index / 64;
                     let j = (index % 64) / 8;
                     let k = index % 8;
-                    result.push((data.get(i).unwrap().0[j] >> k) % 2 == 1);
+                    if let Some(word) = data.get(i) {
+                        result.push((word.0[j] >> k) % 2 == 1);
+                    } else {
+                        result.push(false);
+                    }
                 }
                 result
             }
-            _ => todo!(),
+            _ => vec![],
         }
     }
 }
