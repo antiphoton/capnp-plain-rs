@@ -32,7 +32,7 @@ impl<'a> FarPointer<'a> {
         let Word(a) = *word_ref;
         let offset = get_offset_bits(Word(a), 2)? as usize;
         let double_landing = offset % 2 == 1;
-        let offset = offset / 2;
+        let offset = offset >> 1;
         let segment_id = u32::from_le_bytes([a[4], a[5], a[6], a[7]]);
         let pointer = FarPointer {
             double_landing,
