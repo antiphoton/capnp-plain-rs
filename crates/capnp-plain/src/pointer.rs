@@ -38,7 +38,7 @@ impl LocalPointer {
 
 pub fn get_offset_bits(Word(a): Word, asserted_low_bits: u8) -> Result<isize> {
     ensure!(a[0] % 4 == asserted_low_bits);
-    let offset = i32::from_le_bytes([a[0], a[1], a[2], a[3]]) / 4;
+    let offset = i32::from_le_bytes([a[0], a[1], a[2], a[3]]) >> 2;
     Ok(offset as isize)
 }
 
@@ -50,6 +50,21 @@ mod tests {
         assert_eq!(
             get_offset_bits(Word([10, 31, 0, 0, 0, 0, 0, 0]), 2).unwrap(),
             1986
+        );
+    }
+    #[test]
+    fn negative_offset() {
+        assert_eq!(
+            get_offset_bits(Word([254, 255, 255, 255, 0, 0, 0, 0]), 2).unwrap(),
+            -1
+        );
+        assert_eq!(
+            get_offset_bits(Word([250, 255, 255, 255, 0, 0, 0, 0]), 2).unwrap(),
+            -2
+        );
+        assert_eq!(
+            get_offset_bits(Word([246, 255, 255, 255, 0, 0, 0, 0]), 2).unwrap(),
+            -3
         );
     }
 }
