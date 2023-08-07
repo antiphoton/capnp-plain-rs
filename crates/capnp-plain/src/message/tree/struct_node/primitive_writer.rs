@@ -82,6 +82,13 @@ define_big_writer!(write_f64, f64);
 impl StructNode {
     pub fn write_text(&mut self, offset: u32, data: &str) {
         let data = data.as_bytes();
-        self.write_child(offset, Node::List(ListNode::write_u8_children(data)));
+        let mut child = ListNode::write_u8_children(data);
+        match &mut child {
+            ListNode::Scalar { list_len, .. } => {
+                *list_len += 1;
+            }
+            _ => unreachable!(),
+        }
+        self.write_child(offset, Node::List(child));
     }
 }

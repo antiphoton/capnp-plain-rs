@@ -14,7 +14,7 @@ macro_rules! define_byte_writer {
                     output[i].0[j] = input[index] as u8;
                 }
                 Self::Scalar {
-                    scalar_size: ScalarSize::OneBit,
+                    scalar_size: $s,
                     list_len,
                     data: output,
                 }
