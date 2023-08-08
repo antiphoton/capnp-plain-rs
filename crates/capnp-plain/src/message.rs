@@ -6,13 +6,22 @@ use anyhow::Result;
 
 use crate::{util::split_array::split_array_ref, CapnpPlainStruct};
 
-use self::{segment::Segment, tree::Node, word::word_ref::WordRef};
+use self::{
+    segment::Segment,
+    tree::Node,
+    word::{word_ref::WordRef, Word},
+};
 
 pub struct Message {
     segments: Vec<Segment>,
 }
 
 impl Message {
+    pub fn new_flat(words: Vec<Word>) -> Self {
+        Message {
+            segments: vec![Segment { words }],
+        }
+    }
     pub fn from_bytes(mut input: &[u8]) -> Self {
         let segment_count = take_u32(&mut input) as usize + 1;
         let lens: Vec<_> = (0..segment_count)

@@ -50,8 +50,12 @@ macro_rules! define_big_writer {
 
 impl StructNode {
     fn extend_and_get(&mut self, i: usize) -> &mut Word {
-        self.data.resize_with(i + 1, Default::default);
-        self.data.last_mut().unwrap()
+        if i < self.data.len() {
+            &mut self.data[i]
+        } else {
+            self.data.resize_with(i + 1, Default::default);
+            self.data.last_mut().unwrap()
+        }
     }
     pub fn write_bool(&mut self, offset: u32, value: bool, default_value: bool) {
         if value == default_value {
@@ -81,14 +85,9 @@ define_big_writer!(write_f64, f64);
 
 impl StructNode {
     pub fn write_text(&mut self, offset: u32, data: &str) {
-        let data = data.as_bytes();
-        let mut child = ListNode::write_u8_children(data);
-        match &mut child {
-            ListNode::Scalar { list_len, .. } => {
-                *list_len += 1;
-            }
-            _ => unreachable!(),
-        }
+        let mut data = data.to_string().into_bytes();
+        data.push(0);
+        let child = ListNode::write_u8_children(&data);
         self.write_child(offset, Node::List(child));
     }
 }

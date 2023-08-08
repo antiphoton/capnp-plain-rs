@@ -18,7 +18,7 @@ use anyhow::{ensure, Result};
 
 use crate::message::word::{word_ref::WordRef, Word};
 
-use super::{get_offset_bits, LocalPointer};
+use super::{read_offset_bits, LocalPointer};
 
 pub struct FarPointer<'a> {
     double_landing: bool,
@@ -28,9 +28,10 @@ pub struct FarPointer<'a> {
 }
 
 impl<'a> FarPointer<'a> {
+    pub const TAG: u8 = 2;
     pub fn new(word_ref: WordRef<'a>) -> Result<Self> {
         let Word(a) = *word_ref;
-        let offset = get_offset_bits(Word(a), 2)? as usize;
+        let offset = read_offset_bits(Word(a), Self::TAG)? as usize;
         let double_landing = offset % 2 == 1;
         let offset = offset >> 1;
         let segment_id = u32::from_le_bytes([a[4], a[5], a[6], a[7]]);
@@ -44,7 +45,7 @@ impl<'a> FarPointer<'a> {
     }
     pub fn read(&self) -> Result<(LocalPointer, WordRef<'a>)> {
         let landing = self.word_ref.get_cousin(self.segment_id, self.offset);
-        ensure!(landing.0[0] % 4 != 2);
+        ensure!(landing.0[0] % 4 != Self::TAG);
         if self.double_landing {
             let tag_word = landing.get_next();
             let nested = FarPointer::new(landing)?;
@@ -52,7 +53,7 @@ impl<'a> FarPointer<'a> {
             let base = self
                 .word_ref
                 .get_cousin(nested.segment_id, nested.offset + 1);
-            ensure!(tag_word.0[0] % 4 != 2);
+            ensure!(tag_word.0[0] % 4 != Self::TAG);
             let local = LocalPointer::read(tag_word)?.0;
             Ok((local, base))
         } else {
