@@ -24,9 +24,9 @@ use anyhow::{Error, Result};
 
 use crate::message::word::Word;
 
-use super::get_offset_bits;
+use super::{read_offset_bits, write_offset_bits};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ScalarSize {
     Void,
     OneBit,
@@ -50,10 +50,14 @@ pub struct ListPointer {
     pub list_len: usize,
 }
 
+impl ListPointer {
+    pub const TAG: u8 = 1;
+}
+
 impl TryFrom<Word> for ListPointer {
     type Error = Error;
     fn try_from(Word(a): Word) -> Result<Self, Self::Error> {
-        let offset = get_offset_bits(Word(a), 1)?;
+        let offset = read_offset_bits(Word(a), Self::TAG)?;
         let element_size = match a[4] % 8 {
             0 => ElementSize::Scalar(ScalarSize::Void),
             1 => ElementSize::Scalar(ScalarSize::OneBit),
@@ -72,5 +76,30 @@ impl TryFrom<Word> for ListPointer {
             list_len: list_len as usize,
         };
         Ok(pointer)
+    }
+}
+
+impl From<ListPointer> for Word {
+    fn from(input: ListPointer) -> Self {
+        let ListPointer {
+            offset,
+            element_size,
+            list_len,
+        } = input;
+        assert_eq!(offset << 2 >> 2, offset);
+        let mut a = write_offset_bits(offset, ListPointer::TAG);
+        let element_size = match element_size {
+            ElementSize::Scalar(ScalarSize::Void) => 0,
+            ElementSize::Scalar(ScalarSize::OneBit) => 1,
+            ElementSize::Scalar(ScalarSize::OneByte) => 2,
+            ElementSize::Scalar(ScalarSize::TwoBytes) => 3,
+            ElementSize::Scalar(ScalarSize::FourBytes) => 4,
+            ElementSize::Scalar(ScalarSize::EightBytes) => 5,
+            ElementSize::Pointer => 6,
+            ElementSize::Composite => 7,
+        };
+        let data = ((list_len as u32) << 3) + element_size;
+        [a[4], a[5], a[6], a[7]] = data.to_le_bytes();
+        Word(a)
     }
 }

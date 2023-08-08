@@ -20,7 +20,11 @@ impl<'a> WordSlice<'a> {
     }
     fn get_raw(&self) -> &[Word] {
         let segment = &self.message.segments[self.segment_id];
-        &segment.words[self.offset..(self.offset + self.length)]
+        if self.offset >= segment.words.len() {
+            return &[];
+        }
+        let end = std::cmp::min(segment.words.len(), self.offset + self.length);
+        &segment.words[self.offset..end]
     }
     pub fn copy_to_owned(&self) -> Vec<Word> {
         self.get_raw().to_owned()

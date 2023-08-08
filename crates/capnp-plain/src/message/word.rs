@@ -3,8 +3,14 @@ pub mod word_slice;
 
 use anyhow::Error;
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, PartialEq)]
 pub struct Word(pub [u8; 8]);
+
+impl Word {
+    pub fn is_zero(&self) -> bool {
+        self.0 == [0; 8]
+    }
+}
 
 impl TryFrom<&[u8]> for Word {
     type Error = Error;
