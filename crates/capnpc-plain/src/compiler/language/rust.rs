@@ -272,7 +272,7 @@ fn generate_common_struct(
                     let node = context.get_node(group.type_id)?;
                     let ty = context.get_full_name(node);
                     let ty = format_ident!("{}", ty);
-                    Some(quote!(#name: #ty::from_node(reader)))
+                    Some(quote!(#name: #ty::from_node(reader),))
                 }
                 _ => None,
             }
