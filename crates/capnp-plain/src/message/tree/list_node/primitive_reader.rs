@@ -20,7 +20,7 @@ macro_rules! define_byte_reader {
                             if let Some(word) = data.get(i) {
                                 result.push(word.0[j] as $t);
                             } else {
-                                result.push(0);
+                                result.push(Default::default());
                             }
                         }
                         result
@@ -34,6 +34,14 @@ macro_rules! define_byte_reader {
 
 define_byte_reader!(read_i8_children, ScalarSize::OneByte, i8);
 define_byte_reader!(read_u8_children, ScalarSize::OneByte, u8);
+define_byte_reader!(read_i16_children, ScalarSize::TwoBytes, i16);
+define_byte_reader!(read_u16_children, ScalarSize::TwoBytes, u16);
+define_byte_reader!(read_i32_children, ScalarSize::FourBytes, i32);
+define_byte_reader!(read_u32_children, ScalarSize::FourBytes, u32);
+define_byte_reader!(read_i64_children, ScalarSize::EightBytes, i64);
+define_byte_reader!(read_u64_children, ScalarSize::EightBytes, u64);
+define_byte_reader!(read_f32_children, ScalarSize::EightBytes, f32);
+define_byte_reader!(read_f64_children, ScalarSize::EightBytes, f64);
 
 impl ListNode {
     pub fn read_bool_children(&self) -> Vec<bool> {
