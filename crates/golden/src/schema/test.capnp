@@ -1,0 +1,1 @@
+../../../../third_party/capnproto/c++/src/capnp/test.capnp
