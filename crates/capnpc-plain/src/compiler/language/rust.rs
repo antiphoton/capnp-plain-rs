@@ -77,6 +77,12 @@ fn read_list(_context: &CompilerContext, offset: u32, ty: &Type) -> Option<Token
         Type::Bool => quote!(|r| r.read_bool_children()),
         Type::Int8 => quote!(|r| r.read_i8_children()),
         Type::Uint8 => quote!(|r| r.read_u8_children()),
+        Type::Int16 => quote!(|r| r.read_i16_children()),
+        Type::Uint16 => quote!(|r| r.read_u16_children()),
+        Type::Int32 => quote!(|r| r.read_i32_children()),
+        Type::Uint32 => quote!(|r| r.read_u32_children()),
+        Type::Int64 => quote!(|r| r.read_i64_children()),
+        Type::Uint64 => quote!(|r| r.read_u64_children()),
         Type::Struct(_) => {
             quote!(|r| r.read_struct_children())
         }
@@ -91,6 +97,7 @@ fn read_slot(context: &CompilerContext, slot: &Field__Slot, is_box: bool) -> Opt
     let Some(ty) = slot.r#type.as_deref() else {
         return None;
     };
+    define_type(context, ty, is_box)?;
     let reader = format_ident!("reader");
     let offset = slot.offset;
     let default_value = slot.default_value.as_deref().unwrap_or(&Value::Void);
@@ -114,6 +121,9 @@ fn read_slot(context: &CompilerContext, slot: &Field__Slot, is_box: bool) -> Opt
         (Type::Uint32, _) => quote!(#reader.read_u32(#offset, 0)),
         (Type::Uint64, Value::Uint64(x)) => quote!(#reader.read_u64(#offset, #x)),
         (Type::Uint64, _) => quote!(#reader.read_u64(#offset, 0)),
+        (Type::Float32, _) => quote!(#reader.read_f32(#offset, 0.0)),
+        (Type::Float64, _) => quote!(#reader.read_f64(#offset, 0.0)),
+        (Type::Data, _) => quote!(#reader.read_data(#offset)),
         (Type::Text, _) => {
             quote!(#reader.read_text(#offset))
         }
@@ -133,7 +143,7 @@ fn read_slot(context: &CompilerContext, slot: &Field__Slot, is_box: bool) -> Opt
             let Some(ty) = type_list.element_type.as_deref() else {
                 return None;
             };
-            read_list(context, offset, ty)?
+            read_list(context, offset, ty).unwrap_or_else(|| quote!(vec![]))
         }
         (Type::Enum(type_enum), default_value) => {
             let default_value = match default_value {

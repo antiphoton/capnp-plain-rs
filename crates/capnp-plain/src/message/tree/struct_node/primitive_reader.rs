@@ -84,11 +84,14 @@ define_big_reader!(read_f64, f64);
 
 impl StructNode {
     pub fn read_text(&self, offset: u32) -> String {
-        let mut bytes = self.read_list(offset, |r| r.read_u8_children());
+        let mut bytes = self.read_data(offset);
         let terminator = bytes.pop();
         if terminator != Some(0) {
             return "".to_string();
         }
         String::from_utf8(bytes).unwrap_or_default()
+    }
+    pub fn read_data(&self, offset: u32) -> Vec<u8> {
+        self.read_list(offset, |r| r.read_u8_children())
     }
 }
