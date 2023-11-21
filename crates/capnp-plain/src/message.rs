@@ -2,7 +2,7 @@ pub mod segment;
 pub mod tree;
 pub mod word;
 
-use anyhow::Result;
+use anyhow::{Error, Result};
 
 use crate::{util::split_array::split_array_ref, CapnpPlainStruct};
 
@@ -45,7 +45,7 @@ impl Message {
         let root = Node::from_pointer(word_ref)?;
         match root {
             Node::Struct(x) => Ok(T::from_node(&x)),
-            _ => todo!(),
+            _ => Err(Error::msg("Message root is not a struct.")),
         }
     }
 }

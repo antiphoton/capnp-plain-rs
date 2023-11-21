@@ -25,7 +25,7 @@ macro_rules! define_byte_reader {
                         }
                         result
                     }
-                    _ => todo!(),
+                    Self::Composite(_) => vec![],
                 }
             }
         }

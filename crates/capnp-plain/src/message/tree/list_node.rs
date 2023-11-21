@@ -73,7 +73,7 @@ impl ListNode {
                     .collect();
                 Self::Composite(children)
             }
-            _ => todo!(),
+            ElementSize::Pointer => Self::Composite(vec![]),
         }
     }
     pub fn to_builder(&self, offset: usize) -> ListNodeSerializer {
