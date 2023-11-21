@@ -236,7 +236,7 @@ fn generate_common_struct(
             match &field.1 {
                 Field_1::Slot(slot) => {
                     let Some(ty) = slot.r#type.as_deref() else {
-                        return None
+                        return None;
                     };
                     let ty = define_type(context, ty, true)?;
                     Some(quote! {
@@ -324,7 +324,7 @@ fn generate_variant_struct(
             match &field.1 {
                 Field_1::Slot(slot) => {
                     let Some(ty) = slot.r#type.as_deref() else {
-                        return None
+                        return None;
                     };
                     if ty == &Type::Void {
                         Some(quote! {
