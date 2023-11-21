@@ -31,7 +31,8 @@ impl LocalPointer {
                 let far_pointer = FarPointer::new(word_ref)?;
                 far_pointer.read()?
             }
-            _ => todo!(),
+            3 => unimplemented!(),
+            _ => unreachable!(),
         };
         Ok(y)
     }
