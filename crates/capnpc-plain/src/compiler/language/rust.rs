@@ -453,7 +453,7 @@ fn generate_node_struct(
     node_struct: &Node__Struct,
 ) -> TokenStream {
     if name.is_empty() {
-        return quote!{};
+        return quote! {};
     }
     let total = format_ident!("{}", name);
     let (common_fields, variant_fields) = split_fields(&node_struct.fields);
