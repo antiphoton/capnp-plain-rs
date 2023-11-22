@@ -127,10 +127,11 @@ impl CapnpPlainStruct for TestAllTypes {
             writer.write_child(2u32, CapnpNode::Struct(child.to_node()));
         }
         writer.write_u16(18u32, self.enum_field as u16, 0u16);
-        writer.write_child(
-            17u32,
-            CapnpNode::List(CapnpListNode::write_struct_children(&self.struct_list)),
-        );
+        writer
+            .write_child(
+                17u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.struct_list)),
+            );
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -226,10 +227,11 @@ impl CapnpPlainStruct for TestDefaults {
             writer.write_child(2u32, CapnpNode::Struct(child.to_node()));
         }
         writer.write_u16(18u32, self.enum_field as u16, 5u16);
-        writer.write_child(
-            17u32,
-            CapnpNode::List(CapnpListNode::write_struct_children(&self.struct_list)),
-        );
+        writer
+            .write_child(
+                17u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.struct_list)),
+            );
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -1170,7 +1172,9 @@ pub struct TestNestedTypes__NestedStruct {
 impl CapnpPlainStruct for TestNestedTypes__NestedStruct {
     fn from_node(reader: &CapnpStructNode) -> Self {
         TestNestedTypes__NestedStruct {
-            outer_nested_enum: TestNestedTypes__NestedEnum::decode(reader.read_u16(0u32, 1u16)),
+            outer_nested_enum: TestNestedTypes__NestedEnum::decode(
+                reader.read_u16(0u32, 1u16),
+            ),
             inner_nested_enum: TestNestedTypes__NestedStruct__NestedEnum::decode(
                 reader.read_u16(1u32, 2u16),
             ),
@@ -1222,7 +1226,9 @@ impl CapnpPlainStruct for TestNestedTypes {
             nested_struct: reader
                 .read_struct(0u32)
                 .map(|x| Box::new(TestNestedTypes__NestedStruct::from_node(x))),
-            outer_nested_enum: TestNestedTypes__NestedEnum::decode(reader.read_u16(0u32, 1u16)),
+            outer_nested_enum: TestNestedTypes__NestedEnum::decode(
+                reader.read_u16(0u32, 1u16),
+            ),
             inner_nested_enum: TestNestedTypes__NestedStruct__NestedEnum::decode(
                 reader.read_u16(1u32, 2u16),
             ),
@@ -1247,7 +1253,9 @@ impl CapnpPlainStruct for TestUsing {
             inner_nested_enum: TestNestedTypes__NestedStruct__NestedEnum::decode(
                 reader.read_u16(0u32, 2u16),
             ),
-            outer_nested_enum: TestNestedTypes__NestedEnum::decode(reader.read_u16(1u32, 1u16)),
+            outer_nested_enum: TestNestedTypes__NestedEnum::decode(
+                reader.read_u16(1u32, 1u16),
+            ),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
@@ -1378,34 +1386,41 @@ impl CapnpPlainStruct for TestLists {
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
-        writer.write_child(
-            0u32,
-            CapnpNode::List(CapnpListNode::write_struct_children(&self.list_0)),
-        );
-        writer.write_child(
-            1u32,
-            CapnpNode::List(CapnpListNode::write_struct_children(&self.list_1)),
-        );
-        writer.write_child(
-            2u32,
-            CapnpNode::List(CapnpListNode::write_struct_children(&self.list_8)),
-        );
-        writer.write_child(
-            3u32,
-            CapnpNode::List(CapnpListNode::write_struct_children(&self.list_16)),
-        );
-        writer.write_child(
-            4u32,
-            CapnpNode::List(CapnpListNode::write_struct_children(&self.list_32)),
-        );
-        writer.write_child(
-            5u32,
-            CapnpNode::List(CapnpListNode::write_struct_children(&self.list_64)),
-        );
-        writer.write_child(
-            6u32,
-            CapnpNode::List(CapnpListNode::write_struct_children(&self.list_p)),
-        );
+        writer
+            .write_child(
+                0u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.list_0)),
+            );
+        writer
+            .write_child(
+                1u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.list_1)),
+            );
+        writer
+            .write_child(
+                2u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.list_8)),
+            );
+        writer
+            .write_child(
+                3u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.list_16)),
+            );
+        writer
+            .write_child(
+                4u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.list_32)),
+            );
+        writer
+            .write_child(
+                5u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.list_64)),
+            );
+        writer
+            .write_child(
+                6u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.list_p)),
+            );
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -1553,9 +1568,7 @@ pub struct TestListDefaults {
 impl CapnpPlainStruct for TestListDefaults {
     fn from_node(reader: &CapnpStructNode) -> Self {
         TestListDefaults {
-            lists: reader
-                .read_struct(0u32)
-                .map(|x| Box::new(TestLists::from_node(x))),
+            lists: reader.read_struct(0u32).map(|x| Box::new(TestLists::from_node(x))),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
@@ -1835,10 +1848,18 @@ pub enum TestStructUnion__Un {
 impl CapnpPlainStruct for TestStructUnion__Un {
     fn from_node(reader: &CapnpStructNode) -> Self {
         match reader.read_u16(0u32, 0) {
-            0u16 => Self::Struct(TestStructUnion__SomeStruct::from_node(
-                reader.read_struct(0u32).unwrap(),
-            )),
-            1u16 => Self::Object(TestAnyPointer::from_node(reader.read_struct(0u32).unwrap())),
+            0u16 => {
+                Self::Struct(
+                    TestStructUnion__SomeStruct::from_node(
+                        reader.read_struct(0u32).unwrap(),
+                    ),
+                )
+            }
+            1u16 => {
+                Self::Object(
+                    TestAnyPointer::from_node(reader.read_struct(0u32).unwrap()),
+                )
+            }
             _ => Self::UnknownDiscriminant,
         }
     }
@@ -1884,10 +1905,11 @@ impl CapnpPlainStruct for TestPrintInlineStructs {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         writer.write_text(0u32, &self.some_text);
-        writer.write_child(
-            1u32,
-            CapnpNode::List(CapnpListNode::write_struct_children(&self.struct_list)),
-        );
+        writer
+            .write_child(
+                1u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.struct_list)),
+            );
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -1912,9 +1934,7 @@ pub struct TestGenerics_0 {
 impl CapnpPlainStruct for TestGenerics_0 {
     fn from_node(reader: &CapnpStructNode) -> Self {
         TestGenerics_0 {
-            rev: reader
-                .read_struct(1u32)
-                .map(|x| Box::new(TestGenerics::from_node(x))),
+            rev: reader.read_struct(1u32).map(|x| Box::new(TestGenerics::from_node(x))),
             list: reader.read_list(2u32, |r| r.read_struct_children()),
         }
     }
@@ -1922,10 +1942,11 @@ impl CapnpPlainStruct for TestGenerics_0 {
         if let Some(child) = &self.rev {
             writer.write_child(1u32, CapnpNode::Struct(child.to_node()));
         }
-        writer.write_child(
-            2u32,
-            CapnpNode::List(CapnpListNode::write_struct_children(&self.list)),
-        );
+        writer
+            .write_child(
+                2u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.list)),
+            );
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -2086,9 +2107,7 @@ pub struct TestGenericsWrapper {
 impl CapnpPlainStruct for TestGenericsWrapper {
     fn from_node(reader: &CapnpStructNode) -> Self {
         TestGenericsWrapper {
-            value: reader
-                .read_struct(0u32)
-                .map(|x| Box::new(TestGenerics::from_node(x))),
+            value: reader.read_struct(0u32).map(|x| Box::new(TestGenerics::from_node(x))),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
@@ -2217,9 +2236,7 @@ impl CapnpPlainStruct for TestUseGenerics {
             use_aliases: reader
                 .read_struct(17u32)
                 .map(|x| Box::new(TestGenerics__UseAliases::from_node(x))),
-            cap: reader
-                .read_struct(18u32)
-                .map(|x| Box::new(TestGenerics::from_node(x))),
+            cap: reader.read_struct(18u32).map(|x| Box::new(TestGenerics::from_node(x))),
             bind_enum_list: reader
                 .read_struct(20u32)
                 .map(|x| Box::new(TestGenerics::from_node(x))),
@@ -2406,10 +2423,11 @@ impl CapnpPlainStruct for TestTransferCap {
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
-        writer.write_child(
-            0u32,
-            CapnpNode::List(CapnpListNode::write_struct_children(&self.list)),
-        );
+        writer
+            .write_child(
+                0u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.list)),
+            );
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -2515,7 +2533,10 @@ pub struct TestNameAnnotation__BadlyNamedUnion__BadlyNamedGroup {
 }
 impl CapnpPlainStruct for TestNameAnnotation__BadlyNamedUnion__BadlyNamedGroup {
     fn from_node(reader: &CapnpStructNode) -> Self {
-        TestNameAnnotation__BadlyNamedUnion__BadlyNamedGroup { foo: (), bar: () }
+        TestNameAnnotation__BadlyNamedUnion__BadlyNamedGroup {
+            foo: (),
+            bar: (),
+        }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {}
 }
@@ -2614,12 +2635,20 @@ pub enum TestNameAnnotation__BadlyNamedUnion {
 impl CapnpPlainStruct for TestNameAnnotation__BadlyNamedUnion {
     fn from_node(reader: &CapnpStructNode) -> Self {
         match reader.read_u16(3u32, 0) {
-            0u16 => Self::BadlyNamedGroup(
-                TestNameAnnotation__BadlyNamedUnion__BadlyNamedGroup::from_node(reader),
-            ),
-            1u16 => Self::Baz(TestNameAnnotation__NestedStruct::from_node(
-                reader.read_struct(0u32).unwrap(),
-            )),
+            0u16 => {
+                Self::BadlyNamedGroup(
+                    TestNameAnnotation__BadlyNamedUnion__BadlyNamedGroup::from_node(
+                        reader,
+                    ),
+                )
+            }
+            1u16 => {
+                Self::Baz(
+                    TestNameAnnotation__NestedStruct::from_node(
+                        reader.read_struct(0u32).unwrap(),
+                    ),
+                )
+            }
             _ => Self::UnknownDiscriminant,
         }
     }
@@ -2687,10 +2716,13 @@ impl CapnpPlainStruct for TestImpliedFirstField {
         if let Some(child) = &self.text_struct {
             writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
         }
-        writer.write_child(
-            1u32,
-            CapnpNode::List(CapnpListNode::write_struct_children(&self.text_struct_list)),
-        );
+        writer
+            .write_child(
+                1u32,
+                CapnpNode::List(
+                    CapnpListNode::write_struct_children(&self.text_struct_list),
+                ),
+            );
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -2736,16 +2768,15 @@ impl CapnpPlainStruct for TestCycleBNoCaps {
     fn from_node(reader: &CapnpStructNode) -> Self {
         TestCycleBNoCaps {
             foo: reader.read_list(0u32, |r| r.read_struct_children()),
-            bar: reader
-                .read_struct(1u32)
-                .map(|x| Box::new(TestAllTypes::from_node(x))),
+            bar: reader.read_struct(1u32).map(|x| Box::new(TestAllTypes::from_node(x))),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
-        writer.write_child(
-            0u32,
-            CapnpNode::List(CapnpListNode::write_struct_children(&self.foo)),
-        );
+        writer
+            .write_child(
+                0u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.foo)),
+            );
         if let Some(child) = &self.bar {
             writer.write_child(1u32, CapnpNode::Struct(child.to_node()));
         }
@@ -2780,10 +2811,11 @@ impl CapnpPlainStruct for TestCycleBWithCaps {
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
-        writer.write_child(
-            0u32,
-            CapnpNode::List(CapnpListNode::write_struct_children(&self.foo)),
-        );
+        writer
+            .write_child(
+                0u32,
+                CapnpNode::List(CapnpListNode::write_struct_children(&self.foo)),
+            );
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
