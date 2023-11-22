@@ -1,13 +1,16 @@
 mod schema;
 
-use std::{fs::File, io::Write};
+use std::{
+    fs::{read, File},
+    io::Write,
+};
 
 use capnp_plain::message::Message;
 
 use crate::schema::test_capnp::TestAllTypes;
 
 fn get_pretty_json() -> String {
-    let message = Message::from_bytes(include_bytes!("./testdata/binary"));
+    let message = Message::from_bytes(&read("src/testdata/binary").unwrap());
     let test_all_types: TestAllTypes = message.read_root().unwrap();
     serde_json::to_string_pretty(&test_all_types).unwrap()
 }
