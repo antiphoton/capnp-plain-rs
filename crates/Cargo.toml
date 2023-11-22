@@ -2,4 +2,5 @@
 members = [
   "capnp-plain",
   "capnpc-plain",
+  "golden",
 ]

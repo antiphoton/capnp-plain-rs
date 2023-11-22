@@ -452,6 +452,9 @@ fn generate_node_struct(
     name: &str,
     node_struct: &Node__Struct,
 ) -> TokenStream {
+    if name.is_empty() {
+        return quote! {};
+    }
     let total = format_ident!("{}", name);
     let (common_fields, variant_fields) = split_fields(&node_struct.fields);
     let discriminant_offset = node_struct.discriminant_offset;
