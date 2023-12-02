@@ -5,12 +5,18 @@ use std::{
     io::Write,
 };
 
-use capnp_plain::message::Message;
+use capnp_plain::message::{EncodingOptions, Message};
 
 use crate::schema::test_capnp::TestAllTypes;
 
 fn get_pretty_json() -> String {
-    let message = Message::from_bytes(&read("src/testdata/binary").unwrap());
+    let message = Message::from_bytes(
+        &read("src/testdata/binary").unwrap(),
+        EncodingOptions {
+            pack: false,
+            segment_table: true,
+        },
+    );
     let test_all_types: TestAllTypes = message.read_root().unwrap();
     serde_json::to_string_pretty(&test_all_types).unwrap()
 }
