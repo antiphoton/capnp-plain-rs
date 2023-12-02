@@ -83,6 +83,8 @@ fn read_list(_context: &CompilerContext, offset: u32, ty: &Type) -> Option<Token
         Type::Uint32 => quote!(|r| r.read_u32_children()),
         Type::Int64 => quote!(|r| r.read_i64_children()),
         Type::Uint64 => quote!(|r| r.read_u64_children()),
+        Type::Float32 => quote!(|r| r.read_f32_children()),
+        Type::Float64 => quote!(|r| r.read_f64_children()),
         Type::Struct(_) => {
             quote!(|r| r.read_struct_children())
         }
