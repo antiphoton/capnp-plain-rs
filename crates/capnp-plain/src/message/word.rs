@@ -10,6 +10,54 @@ impl Word {
     pub fn is_zero(&self) -> bool {
         self.0 == [0; 8]
     }
+    pub fn from_bytes(bytes: &[u8]) -> Vec<Self> {
+        bytes
+            .chunks_exact(8)
+            .map(|x| {
+                let x: [u8; 8] = x.try_into().unwrap();
+                Word(x)
+            })
+            .collect()
+    }
+    pub fn from_packed_bytes(input: &[u8]) -> Vec<Self> {
+        let mut output = vec![];
+        let mut input = input.iter().cloned();
+        while let Some(tag) = input.next() {
+            match tag {
+                0 => {
+                    let n = input.next().unwrap() + 1;
+                    for _ in 0..n {
+                        output.push(Word([0; 8]));
+                    }
+                }
+                0xff => {
+                    output.push(take_word(&mut input));
+                    let n = input.next().unwrap();
+                    for _ in 0..n {
+                        output.push(take_word(&mut input));
+                    }
+                }
+                _ => {
+                    let y: Vec<_> = (0..8)
+                        .map(|i| {
+                            if (tag & (1 << i)) > 0 {
+                                input.next().unwrap()
+                            } else {
+                                0
+                            }
+                        })
+                        .collect();
+                    output.push(Word(y.try_into().unwrap()));
+                }
+            }
+        }
+        output
+    }
+}
+
+fn take_word(input: &mut impl Iterator<Item = u8>) -> Word {
+    let bytes: Vec<u8> = input.by_ref().take(8).collect();
+    Word(bytes.try_into().unwrap())
 }
 
 impl TryFrom<&[u8]> for Word {

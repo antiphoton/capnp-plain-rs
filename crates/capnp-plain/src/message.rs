@@ -4,7 +4,7 @@ pub mod word;
 
 use anyhow::{Error, Result};
 
-use crate::{util::split_array::split_array_ref, CapnpPlainStruct};
+use crate::CapnpPlainStruct;
 
 use self::{
     segment::Segment,
@@ -16,28 +16,35 @@ pub struct Message {
     segments: Vec<Segment>,
 }
 
+pub struct EncodingOptions {
+    pub segment_table: bool,
+    pub pack: bool,
+}
+
 impl Message {
     pub fn new_flat(words: Vec<Word>) -> Self {
         Message {
             segments: vec![Segment { words }],
         }
     }
-    pub fn from_bytes(mut input: &[u8]) -> Self {
-        let segment_count = take_u32(&mut input) as usize + 1;
-        let lens: Vec<_> = (0..segment_count)
-            .map(|_| take_u32(&mut input) as usize)
-            .collect();
-        if segment_count % 2 == 0 {
-            take_u32(&mut input);
-        }
-        let segments = lens
-            .into_iter()
-            .map(|len| {
-                let data;
-                (data, input) = input.split_at(len * 8);
-                Segment::from_bytes(data)
-            })
-            .collect();
+    pub fn from_bytes(input: &[u8], options: EncodingOptions) -> Self {
+        let words = if options.pack {
+            Word::from_packed_bytes(input)
+        } else {
+            Word::from_bytes(input)
+        };
+        let segments = if options.segment_table {
+            let segment_count = get_u32(&words, 0) as usize + 1;
+            let lens: Vec<_> = (0..segment_count).map(|i| get_u32(&words, 1 + i)).collect();
+            let mut words = words.iter().cloned().skip(segment_count / 2 + 1);
+            lens.into_iter()
+                .map(|x| Segment {
+                    words: words.by_ref().take(x as usize).collect(),
+                })
+                .collect()
+        } else {
+            vec![Segment { words }]
+        };
         Message { segments }
     }
     pub fn read_root<T: CapnpPlainStruct>(&self) -> Result<T> {
@@ -50,10 +57,14 @@ impl Message {
     }
 }
 
-fn take_u32(bytes: &mut &[u8]) -> u32 {
-    let value;
-    (value, *bytes) = split_array_ref(bytes);
-    u32::from_le_bytes(*value)
+fn get_u32(words: &[Word], i: usize) -> u32 {
+    let word = words[i / 2].0;
+    let a = if i % 2 == 0 {
+        [word[0], word[1], word[2], word[3]]
+    } else {
+        [word[4], word[5], word[6], word[7]]
+    };
+    u32::from_le_bytes(a)
 }
 
 impl std::fmt::Debug for Message {
