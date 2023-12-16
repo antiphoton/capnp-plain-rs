@@ -47,7 +47,7 @@ impl CapnpPlainStruct for Field_0 {
         Field_0 {
             name: reader.read_text(0u32),
             code_order: reader.read_u16(0u32, 0u16),
-            annotations: reader.read_list(1u32, |r| r.read_struct_children()),
+            annotations: reader.read_list(1u32, CapnpListNode::read_struct_children),
             discriminant_value: reader.read_u16(1u32, 65535u16),
             ordinal: Field__Ordinal::from_node(reader),
         }
@@ -124,9 +124,9 @@ impl CapnpPlainStruct for Node_0 {
             display_name: reader.read_text(0u32),
             display_name_prefix_length: reader.read_u32(2u32, 0u32),
             scope_id: reader.read_u64(2u32, 0u64),
-            nested_nodes: reader.read_list(1u32, |r| r.read_struct_children()),
-            annotations: reader.read_list(2u32, |r| r.read_struct_children()),
-            parameters: reader.read_list(5u32, |r| r.read_struct_children()),
+            nested_nodes: reader.read_list(1u32, CapnpListNode::read_struct_children),
+            annotations: reader.read_list(2u32, CapnpListNode::read_struct_children),
+            parameters: reader.read_list(5u32, CapnpListNode::read_struct_children),
             is_generic: reader.read_bool(288u32, false),
         }
     }
@@ -236,7 +236,7 @@ impl CapnpPlainStruct for Node__Struct {
             is_group: reader.read_bool(224u32, false),
             discriminant_count: reader.read_u16(15u32, 0u16),
             discriminant_offset: reader.read_u32(8u32, 0u32),
-            fields: reader.read_list(3u32, |r| r.read_struct_children()),
+            fields: reader.read_list(3u32, CapnpListNode::read_struct_children),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
@@ -264,7 +264,7 @@ impl CapnpPlainStruct for Enumerant {
         Enumerant {
             name: reader.read_text(0u32),
             code_order: reader.read_u16(0u32, 0u16),
-            annotations: reader.read_list(1u32, |r| r.read_struct_children()),
+            annotations: reader.read_list(1u32, CapnpListNode::read_struct_children),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
@@ -284,7 +284,7 @@ pub struct Node__Enum {
 impl CapnpPlainStruct for Node__Enum {
     fn from_node(reader: &CapnpStructNode) -> Self {
         Node__Enum {
-            enumerants: reader.read_list(3u32, |r| r.read_struct_children()),
+            enumerants: reader.read_list(3u32, CapnpListNode::read_struct_children),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
@@ -313,12 +313,13 @@ impl CapnpPlainStruct for Method {
             code_order: reader.read_u16(0u32, 0u16),
             param_struct_type: reader.read_u64(1u32, 0u64),
             result_struct_type: reader.read_u64(2u32, 0u64),
-            annotations: reader.read_list(1u32, |r| r.read_struct_children()),
+            annotations: reader.read_list(1u32, CapnpListNode::read_struct_children),
             param_brand: reader.read_struct(2u32).map(|x| Box::new(Brand::from_node(x))),
             result_brand: reader
                 .read_struct(3u32)
                 .map(|x| Box::new(Brand::from_node(x))),
-            implicit_parameters: reader.read_list(4u32, |r| r.read_struct_children()),
+            implicit_parameters: reader
+                .read_list(4u32, CapnpListNode::read_struct_children),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
@@ -373,8 +374,8 @@ pub struct Node__Interface {
 impl CapnpPlainStruct for Node__Interface {
     fn from_node(reader: &CapnpStructNode) -> Self {
         Node__Interface {
-            methods: reader.read_list(3u32, |r| r.read_struct_children()),
-            superclasses: reader.read_list(4u32, |r| r.read_struct_children()),
+            methods: reader.read_list(3u32, CapnpListNode::read_struct_children),
+            superclasses: reader.read_list(4u32, CapnpListNode::read_struct_children),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
@@ -724,7 +725,7 @@ pub struct Brand {
 impl CapnpPlainStruct for Brand {
     fn from_node(reader: &CapnpStructNode) -> Self {
         Brand {
-            scopes: reader.read_list(0u32, |r| r.read_struct_children()),
+            scopes: reader.read_list(0u32, CapnpListNode::read_struct_children),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
@@ -759,7 +760,9 @@ pub enum Brand__Scope_1 {
 impl CapnpPlainStruct for Brand__Scope_1 {
     fn from_node(reader: &CapnpStructNode) -> Self {
         match reader.read_u16(4u32, 0) {
-            0u16 => Self::Bind(reader.read_list(0u32, |r| r.read_struct_children())),
+            0u16 => {
+                Self::Bind(reader.read_list(0u32, CapnpListNode::read_struct_children))
+            }
             1u16 => Self::Inherit,
             _ => Self::UnknownDiscriminant,
         }
@@ -1099,7 +1102,7 @@ impl CapnpPlainStruct for Node__SourceInfo {
         Node__SourceInfo {
             id: reader.read_u64(0u32, 0u64),
             doc_comment: reader.read_text(0u32),
-            members: reader.read_list(1u32, |r| r.read_struct_children()),
+            members: reader.read_list(1u32, CapnpListNode::read_struct_children),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
@@ -1143,7 +1146,7 @@ impl CapnpPlainStruct for CodeGeneratorRequest__RequestedFile {
         CodeGeneratorRequest__RequestedFile {
             id: reader.read_u64(0u32, 0u64),
             filename: reader.read_text(0u32),
-            imports: reader.read_list(1u32, |r| r.read_struct_children()),
+            imports: reader.read_list(1u32, CapnpListNode::read_struct_children),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
@@ -1166,12 +1169,12 @@ pub struct CodeGeneratorRequest {
 impl CapnpPlainStruct for CodeGeneratorRequest {
     fn from_node(reader: &CapnpStructNode) -> Self {
         CodeGeneratorRequest {
-            nodes: reader.read_list(0u32, |r| r.read_struct_children()),
-            requested_files: reader.read_list(1u32, |r| r.read_struct_children()),
+            nodes: reader.read_list(0u32, CapnpListNode::read_struct_children),
+            requested_files: reader.read_list(1u32, CapnpListNode::read_struct_children),
             capnp_version: reader
                 .read_struct(2u32)
                 .map(|x| Box::new(CapnpVersion::from_node(x))),
-            source_info: reader.read_list(3u32, |r| r.read_struct_children()),
+            source_info: reader.read_list(3u32, CapnpListNode::read_struct_children),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
