@@ -15,4 +15,4 @@ CAPNP_TOOL=$PWD/bazel-bin/src/capnp/capnp_tool
 cd src
 export RUST_BACKTRACE=1
 $CAPNP_TOOL compile -o- -I. ./capnp/test.capnp | $CAPNPC_RUST
-mv ./capnp/test_capnp.rs ./capnp/test_capnp.ts $TARGET
+mv ./capnp/test_capnp.rs $TARGET

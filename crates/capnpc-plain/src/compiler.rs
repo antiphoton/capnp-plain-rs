@@ -30,6 +30,5 @@ fn split_fields(fields: &[Field]) -> (Vec<&Field>, BTreeMap<u16, &Field>) {
 
 pub fn compile(code_generator_request: &CodeGeneratorRequest) -> Result<()> {
     language::rust::compile(code_generator_request)?;
-    language::typescript::compile(code_generator_request)?;
     Ok(())
 }
