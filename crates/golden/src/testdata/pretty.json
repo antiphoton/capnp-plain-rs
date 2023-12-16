@@ -293,7 +293,11 @@
         "interface_list": []
       }
     ],
-    "enum_list": [],
+    "enum_list": [
+      "Qux",
+      "Bar",
+      "Grault"
+    ],
     "interface_list": []
   },
   "enum_field": "Corge",
@@ -459,6 +463,9 @@
       "interface_list": []
     }
   ],
-  "enum_list": [],
+  "enum_list": [
+    "Foo",
+    "Garply"
+  ],
   "interface_list": []
 }

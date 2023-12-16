@@ -16,3 +16,7 @@ pub trait CapnpPlainStruct: Sized {
         output
     }
 }
+
+pub trait CapnpPlainEnum: Sized {
+    fn decode(x: u16) -> Self;
+}

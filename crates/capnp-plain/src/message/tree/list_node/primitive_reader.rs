@@ -1,4 +1,4 @@
-use crate::message::word::Word;
+use crate::{message::word::Word, CapnpPlainEnum};
 
 use super::{ListNode, ScalarSize};
 
@@ -130,5 +130,11 @@ impl ListNode {
             }
             _ => vec![],
         }
+    }
+    pub fn read_enum_children<T: CapnpPlainEnum>(&self) -> Vec<T> {
+        self.read_u16_children()
+            .into_iter()
+            .map(T::decode)
+            .collect()
     }
 }

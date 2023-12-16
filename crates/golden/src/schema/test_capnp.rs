@@ -9,7 +9,7 @@ use capnp_plain::{
         list_node::ListNode as CapnpListNode, struct_node::StructNode as CapnpStructNode,
         Node as CapnpNode,
     },
-    CapnpPlainStruct,
+    CapnpPlainEnum, CapnpPlainStruct,
 };
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
@@ -26,8 +26,8 @@ pub enum TestEnum {
     Garply = 7isize,
     UnknownEnumerant,
 }
-impl TestEnum {
-    pub fn decode(x: u16) -> Self {
+impl CapnpPlainEnum for TestEnum {
+    fn decode(x: u16) -> Self {
         match x {
             0..=7u16 => Self::from_u16(x).unwrap(),
             _ => Self::UnknownEnumerant,
@@ -108,7 +108,7 @@ impl CapnpPlainStruct for TestAllTypes {
             text_list: vec![],
             data_list: vec![],
             struct_list: reader.read_list(17u32, CapnpListNode::read_struct_children),
-            enum_list: vec![],
+            enum_list: reader.read_list(18u32, CapnpListNode::read_enum_children),
             interface_list: vec![],
         }
     }
@@ -208,7 +208,7 @@ impl CapnpPlainStruct for TestDefaults {
             text_list: vec![],
             data_list: vec![],
             struct_list: reader.read_list(17u32, CapnpListNode::read_struct_children),
-            enum_list: vec![],
+            enum_list: reader.read_list(18u32, CapnpListNode::read_enum_children),
             interface_list: vec![],
         }
     }
@@ -1191,8 +1191,8 @@ pub enum TestNestedTypes__NestedEnum {
     Bar = 1isize,
     UnknownEnumerant,
 }
-impl TestNestedTypes__NestedEnum {
-    pub fn decode(x: u16) -> Self {
+impl CapnpPlainEnum for TestNestedTypes__NestedEnum {
+    fn decode(x: u16) -> Self {
         match x {
             0..=1u16 => Self::from_u16(x).unwrap(),
             _ => Self::UnknownEnumerant,
@@ -1206,8 +1206,8 @@ pub enum TestNestedTypes__NestedStruct__NestedEnum {
     Quux = 2isize,
     UnknownEnumerant,
 }
-impl TestNestedTypes__NestedStruct__NestedEnum {
-    pub fn decode(x: u16) -> Self {
+impl CapnpPlainEnum for TestNestedTypes__NestedStruct__NestedEnum {
+    fn decode(x: u16) -> Self {
         match x {
             0..=2u16 => Self::from_u16(x).unwrap(),
             _ => Self::UnknownEnumerant,
@@ -2472,8 +2472,8 @@ pub enum TestSturdyRefObjectId__Tag {
     TestMoreStuff = 5isize,
     UnknownEnumerant,
 }
-impl TestSturdyRefObjectId__Tag {
-    pub fn decode(x: u16) -> Self {
+impl CapnpPlainEnum for TestSturdyRefObjectId__Tag {
+    fn decode(x: u16) -> Self {
         match x {
             0..=5u16 => Self::from_u16(x).unwrap(),
             _ => Self::UnknownEnumerant,
@@ -2673,8 +2673,8 @@ pub enum TestNameAnnotation__BadlyNamedEnum {
     Baz = 2isize,
     UnknownEnumerant,
 }
-impl TestNameAnnotation__BadlyNamedEnum {
-    pub fn decode(x: u16) -> Self {
+impl CapnpPlainEnum for TestNameAnnotation__BadlyNamedEnum {
+    fn decode(x: u16) -> Self {
         match x {
             0..=2u16 => Self::from_u16(x).unwrap(),
             _ => Self::UnknownEnumerant,
@@ -2688,8 +2688,8 @@ pub enum TestNameAnnotation__NestedStruct__DeeplyNestedEnum {
     Grault = 2isize,
     UnknownEnumerant,
 }
-impl TestNameAnnotation__NestedStruct__DeeplyNestedEnum {
-    pub fn decode(x: u16) -> Self {
+impl CapnpPlainEnum for TestNameAnnotation__NestedStruct__DeeplyNestedEnum {
+    fn decode(x: u16) -> Self {
         match x {
             0..=2u16 => Self::from_u16(x).unwrap(),
             _ => Self::UnknownEnumerant,

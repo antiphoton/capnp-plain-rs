@@ -88,6 +88,9 @@ fn read_list(_context: &CompilerContext, offset: u32, ty: &Type) -> Option<Token
         Type::Struct(_) => {
             quote!(CapnpListNode::read_struct_children)
         }
+        Type::Enum(_) => {
+            quote!(CapnpListNode::read_enum_children)
+        }
         _ => return None,
     };
     let reader = format_ident!("reader");
@@ -512,8 +515,8 @@ fn generate_node_enum(name: &str, node_enum: &Node__Enum) -> TokenStream {
             UnknownEnumerant,
         }
 
-        impl #name {
-            pub fn decode(x: u16) -> Self {
+        impl CapnpPlainEnum for #name {
+            fn decode(x: u16) -> Self {
                 match x {
                     0..=#max => Self::from_u16(x).unwrap(),
                     _ => Self::UnknownEnumerant,
@@ -557,7 +560,7 @@ pub fn compile(code_generator_request: &CodeGeneratorRequest) -> Result<()> {
                 list_node::ListNode as CapnpListNode, struct_node::StructNode as CapnpStructNode,
                 Node as CapnpNode,
             },
-            CapnpPlainStruct,
+            CapnpPlainEnum, CapnpPlainStruct,
         };
         use num_derive::FromPrimitive;
         use num_traits::FromPrimitive;
