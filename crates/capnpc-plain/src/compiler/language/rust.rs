@@ -90,7 +90,7 @@ fn read_list(_context: &CompilerContext, offset: u32, ty: &Type) -> Option<Token
         }
         Type::Enum(_) => {
             quote!(CapnpListNode::read_enum_children)
-        },
+        }
         _ => return None,
     };
     let reader = format_ident!("reader");
