@@ -94,20 +94,20 @@ impl CapnpPlainStruct for TestAllTypes {
             enum_field: TestEnum::decode(reader.read_u16(18u32, 0u16)),
             interface_field: (),
             void_list: vec![],
-            bool_list: reader.read_list(4u32, |r| r.read_bool_children()),
-            int_8_list: reader.read_list(5u32, |r| r.read_i8_children()),
-            int_16_list: reader.read_list(6u32, |r| r.read_i16_children()),
-            int_32_list: reader.read_list(7u32, |r| r.read_i32_children()),
-            int_64_list: reader.read_list(8u32, |r| r.read_i64_children()),
-            u_int_8_list: reader.read_list(9u32, |r| r.read_u8_children()),
-            u_int_16_list: reader.read_list(10u32, |r| r.read_u16_children()),
-            u_int_32_list: reader.read_list(11u32, |r| r.read_u32_children()),
-            u_int_64_list: reader.read_list(12u32, |r| r.read_u64_children()),
-            float_32_list: reader.read_list(13u32, |r| r.read_f32_children()),
-            float_64_list: reader.read_list(14u32, |r| r.read_f64_children()),
+            bool_list: reader.read_list(4u32, CapnpListNode::read_bool_children),
+            int_8_list: reader.read_list(5u32, CapnpListNode::read_i8_children),
+            int_16_list: reader.read_list(6u32, CapnpListNode::read_i16_children),
+            int_32_list: reader.read_list(7u32, CapnpListNode::read_i32_children),
+            int_64_list: reader.read_list(8u32, CapnpListNode::read_i64_children),
+            u_int_8_list: reader.read_list(9u32, CapnpListNode::read_u8_children),
+            u_int_16_list: reader.read_list(10u32, CapnpListNode::read_u16_children),
+            u_int_32_list: reader.read_list(11u32, CapnpListNode::read_u32_children),
+            u_int_64_list: reader.read_list(12u32, CapnpListNode::read_u64_children),
+            float_32_list: reader.read_list(13u32, CapnpListNode::read_f32_children),
+            float_64_list: reader.read_list(14u32, CapnpListNode::read_f64_children),
             text_list: vec![],
             data_list: vec![],
-            struct_list: reader.read_list(17u32, |r| r.read_struct_children()),
+            struct_list: reader.read_list(17u32, CapnpListNode::read_struct_children),
             enum_list: vec![],
             interface_list: vec![],
         }
@@ -194,20 +194,20 @@ impl CapnpPlainStruct for TestDefaults {
             enum_field: TestEnum::decode(reader.read_u16(18u32, 5u16)),
             interface_field: (),
             void_list: vec![],
-            bool_list: reader.read_list(4u32, |r| r.read_bool_children()),
-            int_8_list: reader.read_list(5u32, |r| r.read_i8_children()),
-            int_16_list: reader.read_list(6u32, |r| r.read_i16_children()),
-            int_32_list: reader.read_list(7u32, |r| r.read_i32_children()),
-            int_64_list: reader.read_list(8u32, |r| r.read_i64_children()),
-            u_int_8_list: reader.read_list(9u32, |r| r.read_u8_children()),
-            u_int_16_list: reader.read_list(10u32, |r| r.read_u16_children()),
-            u_int_32_list: reader.read_list(11u32, |r| r.read_u32_children()),
-            u_int_64_list: reader.read_list(12u32, |r| r.read_u64_children()),
-            float_32_list: reader.read_list(13u32, |r| r.read_f32_children()),
-            float_64_list: reader.read_list(14u32, |r| r.read_f64_children()),
+            bool_list: reader.read_list(4u32, CapnpListNode::read_bool_children),
+            int_8_list: reader.read_list(5u32, CapnpListNode::read_i8_children),
+            int_16_list: reader.read_list(6u32, CapnpListNode::read_i16_children),
+            int_32_list: reader.read_list(7u32, CapnpListNode::read_i32_children),
+            int_64_list: reader.read_list(8u32, CapnpListNode::read_i64_children),
+            u_int_8_list: reader.read_list(9u32, CapnpListNode::read_u8_children),
+            u_int_16_list: reader.read_list(10u32, CapnpListNode::read_u16_children),
+            u_int_32_list: reader.read_list(11u32, CapnpListNode::read_u32_children),
+            u_int_64_list: reader.read_list(12u32, CapnpListNode::read_u64_children),
+            float_32_list: reader.read_list(13u32, CapnpListNode::read_f32_children),
+            float_64_list: reader.read_list(14u32, CapnpListNode::read_f64_children),
             text_list: vec![],
             data_list: vec![],
-            struct_list: reader.read_list(17u32, |r| r.read_struct_children()),
+            struct_list: reader.read_list(17u32, CapnpListNode::read_struct_children),
             enum_list: vec![],
             interface_list: vec![],
         }
@@ -1373,13 +1373,13 @@ pub struct TestLists {
 impl CapnpPlainStruct for TestLists {
     fn from_node(reader: &CapnpStructNode) -> Self {
         TestLists {
-            list_0: reader.read_list(0u32, |r| r.read_struct_children()),
-            list_1: reader.read_list(1u32, |r| r.read_struct_children()),
-            list_8: reader.read_list(2u32, |r| r.read_struct_children()),
-            list_16: reader.read_list(3u32, |r| r.read_struct_children()),
-            list_32: reader.read_list(4u32, |r| r.read_struct_children()),
-            list_64: reader.read_list(5u32, |r| r.read_struct_children()),
-            list_p: reader.read_list(6u32, |r| r.read_struct_children()),
+            list_0: reader.read_list(0u32, CapnpListNode::read_struct_children),
+            list_1: reader.read_list(1u32, CapnpListNode::read_struct_children),
+            list_8: reader.read_list(2u32, CapnpListNode::read_struct_children),
+            list_16: reader.read_list(3u32, CapnpListNode::read_struct_children),
+            list_32: reader.read_list(4u32, CapnpListNode::read_struct_children),
+            list_64: reader.read_list(5u32, CapnpListNode::read_struct_children),
+            list_p: reader.read_list(6u32, CapnpListNode::read_struct_children),
             int_32_list_list: vec![],
             text_list_list: vec![],
             struct_list_list: vec![],
@@ -1613,7 +1613,7 @@ impl CapnpPlainStruct for TestLateUnion__TheUnion {
     fn from_node(reader: &CapnpStructNode) -> Self {
         match reader.read_u16(3u32, 0) {
             0u16 => Self::Qux(reader.read_text(1u32)),
-            1u16 => Self::Corge(reader.read_list(1u32, |r| r.read_i32_children())),
+            1u16 => Self::Corge(reader.read_list(1u32, CapnpListNode::read_i32_children)),
             2u16 => Self::Grault(reader.read_f32(2u32, 0.0)),
             _ => Self::UnknownDiscriminant,
         }
@@ -1645,7 +1645,7 @@ impl CapnpPlainStruct for TestLateUnion__AnotherUnion {
     fn from_node(reader: &CapnpStructNode) -> Self {
         match reader.read_u16(6u32, 0) {
             0u16 => Self::Qux(reader.read_text(2u32)),
-            1u16 => Self::Corge(reader.read_list(2u32, |r| r.read_i32_children())),
+            1u16 => Self::Corge(reader.read_list(2u32, CapnpListNode::read_i32_children)),
             2u16 => Self::Grault(reader.read_f32(4u32, 0.0)),
             _ => Self::UnknownDiscriminant,
         }
@@ -1900,7 +1900,7 @@ impl CapnpPlainStruct for TestPrintInlineStructs {
     fn from_node(reader: &CapnpStructNode) -> Self {
         TestPrintInlineStructs {
             some_text: reader.read_text(0u32),
-            struct_list: reader.read_list(1u32, |r| r.read_struct_children()),
+            struct_list: reader.read_list(1u32, CapnpListNode::read_struct_children),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
@@ -1935,7 +1935,7 @@ impl CapnpPlainStruct for TestGenerics_0 {
     fn from_node(reader: &CapnpStructNode) -> Self {
         TestGenerics_0 {
             rev: reader.read_struct(1u32).map(|x| Box::new(TestGenerics::from_node(x))),
-            list: reader.read_list(2u32, |r| r.read_struct_children()),
+            list: reader.read_list(2u32, CapnpListNode::read_struct_children),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
@@ -2419,7 +2419,7 @@ pub struct TestTransferCap {
 impl CapnpPlainStruct for TestTransferCap {
     fn from_node(reader: &CapnpStructNode) -> Self {
         TestTransferCap {
-            list: reader.read_list(0u32, |r| r.read_struct_children()),
+            list: reader.read_list(0u32, CapnpListNode::read_struct_children),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
@@ -2708,7 +2708,8 @@ impl CapnpPlainStruct for TestImpliedFirstField {
             text_struct: reader
                 .read_struct(0u32)
                 .map(|x| Box::new(TestImpliedFirstField__TextStruct::from_node(x))),
-            text_struct_list: reader.read_list(1u32, |r| r.read_struct_children()),
+            text_struct_list: reader
+                .read_list(1u32, CapnpListNode::read_struct_children),
             int_group: TestImpliedFirstField__IntGroup::from_node(reader),
         }
     }
@@ -2767,7 +2768,7 @@ pub struct TestCycleBNoCaps {
 impl CapnpPlainStruct for TestCycleBNoCaps {
     fn from_node(reader: &CapnpStructNode) -> Self {
         TestCycleBNoCaps {
-            foo: reader.read_list(0u32, |r| r.read_struct_children()),
+            foo: reader.read_list(0u32, CapnpListNode::read_struct_children),
             bar: reader.read_struct(1u32).map(|x| Box::new(TestAllTypes::from_node(x))),
         }
     }
@@ -2807,7 +2808,7 @@ pub struct TestCycleBWithCaps {
 impl CapnpPlainStruct for TestCycleBWithCaps {
     fn from_node(reader: &CapnpStructNode) -> Self {
         TestCycleBWithCaps {
-            foo: reader.read_list(0u32, |r| r.read_struct_children()),
+            foo: reader.read_list(0u32, CapnpListNode::read_struct_children),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {

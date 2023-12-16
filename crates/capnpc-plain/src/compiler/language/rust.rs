@@ -74,19 +74,19 @@ fn define_type(context: &CompilerContext, ty: &Type, is_box: bool) -> Option<Tok
 
 fn read_list(_context: &CompilerContext, offset: u32, ty: &Type) -> Option<TokenStream> {
     let callback = match ty {
-        Type::Bool => quote!(|r| r.read_bool_children()),
-        Type::Int8 => quote!(|r| r.read_i8_children()),
-        Type::Uint8 => quote!(|r| r.read_u8_children()),
-        Type::Int16 => quote!(|r| r.read_i16_children()),
-        Type::Uint16 => quote!(|r| r.read_u16_children()),
-        Type::Int32 => quote!(|r| r.read_i32_children()),
-        Type::Uint32 => quote!(|r| r.read_u32_children()),
-        Type::Int64 => quote!(|r| r.read_i64_children()),
-        Type::Uint64 => quote!(|r| r.read_u64_children()),
-        Type::Float32 => quote!(|r| r.read_f32_children()),
-        Type::Float64 => quote!(|r| r.read_f64_children()),
+        Type::Bool => quote!(CapnpListNode::read_bool_children),
+        Type::Int8 => quote!(CapnpListNode::read_i8_children),
+        Type::Uint8 => quote!(CapnpListNode::read_u8_children),
+        Type::Int16 => quote!(CapnpListNode::read_i16_children),
+        Type::Uint16 => quote!(CapnpListNode::read_u16_children),
+        Type::Int32 => quote!(CapnpListNode::read_i32_children),
+        Type::Uint32 => quote!(CapnpListNode::read_u32_children),
+        Type::Int64 => quote!(CapnpListNode::read_i64_children),
+        Type::Uint64 => quote!(CapnpListNode::read_u64_children),
+        Type::Float32 => quote!(CapnpListNode::read_f32_children),
+        Type::Float64 => quote!(CapnpListNode::read_f64_children),
         Type::Struct(_) => {
-            quote!(|r| r.read_struct_children())
+            quote!(CapnpListNode::read_struct_children)
         }
         _ => return None,
     };
