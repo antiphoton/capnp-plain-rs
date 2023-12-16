@@ -9,7 +9,7 @@ use capnp_plain::{
         list_node::ListNode as CapnpListNode, struct_node::StructNode as CapnpStructNode,
         Node as CapnpNode,
     },
-    CapnpPlainStruct,
+    CapnpPlainEnum, CapnpPlainStruct,
 };
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
@@ -26,8 +26,8 @@ pub enum ElementSize {
     InlineComposite = 7isize,
     UnknownEnumerant,
 }
-impl ElementSize {
-    pub fn decode(x: u16) -> Self {
+impl CapnpPlainEnum for ElementSize {
+    fn decode(x: u16) -> Self {
         match x {
             0..=7u16 => Self::from_u16(x).unwrap(),
             _ => Self::UnknownEnumerant,
