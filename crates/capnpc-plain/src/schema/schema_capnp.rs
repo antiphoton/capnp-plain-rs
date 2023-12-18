@@ -14,7 +14,8 @@ use capnp_plain::{
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
-#[derive(Debug, Clone, Copy, PartialEq, FromPrimitive, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(FromPrimitive, Serialize, Deserialize)]
 pub enum ElementSize {
     Empty = 0isize,
     Bit = 1isize,

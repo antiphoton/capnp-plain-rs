@@ -14,7 +14,8 @@ use capnp_plain::{
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
-#[derive(Debug, Clone, Copy, PartialEq, FromPrimitive, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(FromPrimitive, Serialize, Deserialize)]
 pub enum TestEnum {
     Foo = 0isize,
     Bar = 1isize,
@@ -1185,7 +1186,8 @@ impl CapnpPlainStruct for TestNestedTypes__NestedStruct {
         writer.write_u16(1u32, self.inner_nested_enum as u16, 2u16);
     }
 }
-#[derive(Debug, Clone, Copy, PartialEq, FromPrimitive, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(FromPrimitive, Serialize, Deserialize)]
 pub enum TestNestedTypes__NestedEnum {
     Foo = 0isize,
     Bar = 1isize,
@@ -1199,7 +1201,8 @@ impl CapnpPlainEnum for TestNestedTypes__NestedEnum {
         }
     }
 }
-#[derive(Debug, Clone, Copy, PartialEq, FromPrimitive, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(FromPrimitive, Serialize, Deserialize)]
 pub enum TestNestedTypes__NestedStruct__NestedEnum {
     Baz = 0isize,
     Qux = 1isize,
@@ -2462,7 +2465,8 @@ impl CapnpPlainStruct for TestSturdyRef {
         }
     }
 }
-#[derive(Debug, Clone, Copy, PartialEq, FromPrimitive, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(FromPrimitive, Serialize, Deserialize)]
 pub enum TestSturdyRefObjectId__Tag {
     TestInterface = 0isize,
     TestExtends = 1isize,
@@ -2666,7 +2670,8 @@ impl CapnpPlainStruct for TestNameAnnotation__BadlyNamedUnion {
         writer.write_u16(3u32, discriminant_value, 0);
     }
 }
-#[derive(Debug, Clone, Copy, PartialEq, FromPrimitive, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(FromPrimitive, Serialize, Deserialize)]
 pub enum TestNameAnnotation__BadlyNamedEnum {
     Foo = 0isize,
     Bar = 1isize,
@@ -2681,7 +2686,8 @@ impl CapnpPlainEnum for TestNameAnnotation__BadlyNamedEnum {
         }
     }
 }
-#[derive(Debug, Clone, Copy, PartialEq, FromPrimitive, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(FromPrimitive, Serialize, Deserialize)]
 pub enum TestNameAnnotation__NestedStruct__DeeplyNestedEnum {
     Quux = 0isize,
     Corge = 1isize,
