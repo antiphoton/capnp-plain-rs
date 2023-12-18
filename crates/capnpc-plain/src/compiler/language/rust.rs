@@ -509,7 +509,8 @@ fn generate_node_enum(name: &str, node_enum: &Node__Enum) -> TokenStream {
     let name = format_ident!("{}", name);
     let max = node_enum.enumerants.len() as u16 - 1;
     quote!(
-        #[derive(Debug, Clone, Copy, PartialEq, FromPrimitive, Serialize, Deserialize)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        #[derive(FromPrimitive, Serialize, Deserialize)]
         pub enum #name {
             #(#definitions)*
             UnknownEnumerant,
