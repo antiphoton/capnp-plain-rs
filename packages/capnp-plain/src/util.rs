@@ -1,1 +1,1 @@
-pub mod split_array;
+pub mod array;
