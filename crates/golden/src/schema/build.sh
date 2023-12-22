@@ -5,11 +5,11 @@ cd `dirname $0`;
 
 TARGET=$PWD
 
-cd ../../..
+cd ../../../..
 cargo build
 CAPNPC_RUST=$PWD/target/debug/capnpc-plain
 
-cd ../third_party/capnproto/c++
+cd third_party/capnproto/c++
 CAPNP_TOOL=$PWD/bazel-bin/src/capnp/capnp_tool
 
 cd src

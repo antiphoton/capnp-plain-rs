@@ -27,7 +27,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "capnp-plain",
- "capnpc-plain",
  "num-derive",
  "num-traits",
  "serde",
