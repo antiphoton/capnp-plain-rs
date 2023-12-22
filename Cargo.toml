@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-  "crates/capnp-plain",
-  "crates/capnpc-plain",
-  "crates/golden",
+  "packages/capnp-plain",
+  "packages/capnpc-plain",
+  "packages/golden",
 ]
