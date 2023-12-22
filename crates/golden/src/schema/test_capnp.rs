@@ -11,27 +11,45 @@ use capnp_plain::{
     },
     CapnpPlainEnum, CapnpPlainStruct,
 };
-use num_derive::FromPrimitive;
-use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[derive(FromPrimitive, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub enum TestEnum {
-    Foo = 0isize,
-    Bar = 1isize,
-    Baz = 2isize,
-    Qux = 3isize,
-    Quux = 4isize,
-    Corge = 5isize,
-    Grault = 6isize,
-    Garply = 7isize,
-    UnknownEnumerant,
+    Foo,
+    Bar,
+    Baz,
+    Qux,
+    Quux,
+    Corge,
+    Grault,
+    Garply,
+    UnknownEnumerant(u16),
 }
 impl CapnpPlainEnum for TestEnum {
+    fn encode(self) -> u16 {
+        match self {
+            Self::Foo => 0u16,
+            Self::Bar => 1u16,
+            Self::Baz => 2u16,
+            Self::Qux => 3u16,
+            Self::Quux => 4u16,
+            Self::Corge => 5u16,
+            Self::Grault => 6u16,
+            Self::Garply => 7u16,
+            Self::UnknownEnumerant(x) => x,
+        }
+    }
     fn decode(x: u16) -> Self {
         match x {
-            0..=7u16 => Self::from_u16(x).unwrap(),
-            _ => Self::UnknownEnumerant,
+            0u16 => Self::Foo,
+            1u16 => Self::Bar,
+            2u16 => Self::Baz,
+            3u16 => Self::Qux,
+            4u16 => Self::Quux,
+            5u16 => Self::Corge,
+            6u16 => Self::Grault,
+            7u16 => Self::Garply,
+            x => Self::UnknownEnumerant(x),
         }
     }
 }
@@ -127,7 +145,7 @@ impl CapnpPlainStruct for TestAllTypes {
         if let Some(child) = &self.struct_field {
             writer.write_child(2u32, CapnpNode::Struct(child.to_node()));
         }
-        writer.write_u16(18u32, self.enum_field as u16, 0u16);
+        writer.write_u16(18u32, self.enum_field.encode(), 0u16);
         writer
             .write_child(
                 17u32,
@@ -227,7 +245,7 @@ impl CapnpPlainStruct for TestDefaults {
         if let Some(child) = &self.struct_field {
             writer.write_child(2u32, CapnpNode::Struct(child.to_node()));
         }
-        writer.write_u16(18u32, self.enum_field as u16, 5u16);
+        writer.write_u16(18u32, self.enum_field.encode(), 5u16);
         writer
             .write_child(
                 17u32,
@@ -1182,38 +1200,56 @@ impl CapnpPlainStruct for TestNestedTypes__NestedStruct {
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
-        writer.write_u16(0u32, self.outer_nested_enum as u16, 1u16);
-        writer.write_u16(1u32, self.inner_nested_enum as u16, 2u16);
+        writer.write_u16(0u32, self.outer_nested_enum.encode(), 1u16);
+        writer.write_u16(1u32, self.inner_nested_enum.encode(), 2u16);
     }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[derive(FromPrimitive, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub enum TestNestedTypes__NestedEnum {
-    Foo = 0isize,
-    Bar = 1isize,
-    UnknownEnumerant,
+    Foo,
+    Bar,
+    UnknownEnumerant(u16),
 }
 impl CapnpPlainEnum for TestNestedTypes__NestedEnum {
+    fn encode(self) -> u16 {
+        match self {
+            Self::Foo => 0u16,
+            Self::Bar => 1u16,
+            Self::UnknownEnumerant(x) => x,
+        }
+    }
     fn decode(x: u16) -> Self {
         match x {
-            0..=1u16 => Self::from_u16(x).unwrap(),
-            _ => Self::UnknownEnumerant,
+            0u16 => Self::Foo,
+            1u16 => Self::Bar,
+            x => Self::UnknownEnumerant(x),
         }
     }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[derive(FromPrimitive, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub enum TestNestedTypes__NestedStruct__NestedEnum {
-    Baz = 0isize,
-    Qux = 1isize,
-    Quux = 2isize,
-    UnknownEnumerant,
+    Baz,
+    Qux,
+    Quux,
+    UnknownEnumerant(u16),
 }
 impl CapnpPlainEnum for TestNestedTypes__NestedStruct__NestedEnum {
+    fn encode(self) -> u16 {
+        match self {
+            Self::Baz => 0u16,
+            Self::Qux => 1u16,
+            Self::Quux => 2u16,
+            Self::UnknownEnumerant(x) => x,
+        }
+    }
     fn decode(x: u16) -> Self {
         match x {
-            0..=2u16 => Self::from_u16(x).unwrap(),
-            _ => Self::UnknownEnumerant,
+            0u16 => Self::Baz,
+            1u16 => Self::Qux,
+            2u16 => Self::Quux,
+            x => Self::UnknownEnumerant(x),
         }
     }
 }
@@ -1241,8 +1277,8 @@ impl CapnpPlainStruct for TestNestedTypes {
         if let Some(child) = &self.nested_struct {
             writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
         }
-        writer.write_u16(0u32, self.outer_nested_enum as u16, 1u16);
-        writer.write_u16(1u32, self.inner_nested_enum as u16, 2u16);
+        writer.write_u16(0u32, self.outer_nested_enum.encode(), 1u16);
+        writer.write_u16(1u32, self.inner_nested_enum.encode(), 2u16);
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -1262,8 +1298,8 @@ impl CapnpPlainStruct for TestUsing {
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
-        writer.write_u16(0u32, self.inner_nested_enum as u16, 2u16);
-        writer.write_u16(1u32, self.outer_nested_enum as u16, 1u16);
+        writer.write_u16(0u32, self.inner_nested_enum.encode(), 2u16);
+        writer.write_u16(1u32, self.outer_nested_enum.encode(), 1u16);
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -2466,21 +2502,37 @@ impl CapnpPlainStruct for TestSturdyRef {
     }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[derive(FromPrimitive, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub enum TestSturdyRefObjectId__Tag {
-    TestInterface = 0isize,
-    TestExtends = 1isize,
-    TestPipeline = 2isize,
-    TestTailCallee = 3isize,
-    TestTailCaller = 4isize,
-    TestMoreStuff = 5isize,
-    UnknownEnumerant,
+    TestInterface,
+    TestExtends,
+    TestPipeline,
+    TestTailCallee,
+    TestTailCaller,
+    TestMoreStuff,
+    UnknownEnumerant(u16),
 }
 impl CapnpPlainEnum for TestSturdyRefObjectId__Tag {
+    fn encode(self) -> u16 {
+        match self {
+            Self::TestInterface => 0u16,
+            Self::TestExtends => 1u16,
+            Self::TestPipeline => 2u16,
+            Self::TestTailCallee => 3u16,
+            Self::TestTailCaller => 4u16,
+            Self::TestMoreStuff => 5u16,
+            Self::UnknownEnumerant(x) => x,
+        }
+    }
     fn decode(x: u16) -> Self {
         match x {
-            0..=5u16 => Self::from_u16(x).unwrap(),
-            _ => Self::UnknownEnumerant,
+            0u16 => Self::TestInterface,
+            1u16 => Self::TestExtends,
+            2u16 => Self::TestPipeline,
+            3u16 => Self::TestTailCallee,
+            4u16 => Self::TestTailCaller,
+            5u16 => Self::TestMoreStuff,
+            x => Self::UnknownEnumerant(x),
         }
     }
 }
@@ -2495,7 +2547,7 @@ impl CapnpPlainStruct for TestSturdyRefObjectId {
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
-        writer.write_u16(0u32, self.tag as u16, 0u16);
+        writer.write_u16(0u32, self.tag.encode(), 0u16);
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -2580,7 +2632,7 @@ impl CapnpPlainStruct for TestNameAnnotation_0 {
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
-        writer.write_u16(2u32, self.another_bad_field_name as u16, 0u16);
+        writer.write_u16(2u32, self.another_bad_field_name.encode(), 0u16);
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -2671,34 +2723,54 @@ impl CapnpPlainStruct for TestNameAnnotation__BadlyNamedUnion {
     }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[derive(FromPrimitive, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub enum TestNameAnnotation__BadlyNamedEnum {
-    Foo = 0isize,
-    Bar = 1isize,
-    Baz = 2isize,
-    UnknownEnumerant,
+    Foo,
+    Bar,
+    Baz,
+    UnknownEnumerant(u16),
 }
 impl CapnpPlainEnum for TestNameAnnotation__BadlyNamedEnum {
+    fn encode(self) -> u16 {
+        match self {
+            Self::Foo => 0u16,
+            Self::Bar => 1u16,
+            Self::Baz => 2u16,
+            Self::UnknownEnumerant(x) => x,
+        }
+    }
     fn decode(x: u16) -> Self {
         match x {
-            0..=2u16 => Self::from_u16(x).unwrap(),
-            _ => Self::UnknownEnumerant,
+            0u16 => Self::Foo,
+            1u16 => Self::Bar,
+            2u16 => Self::Baz,
+            x => Self::UnknownEnumerant(x),
         }
     }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[derive(FromPrimitive, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub enum TestNameAnnotation__NestedStruct__DeeplyNestedEnum {
-    Quux = 0isize,
-    Corge = 1isize,
-    Grault = 2isize,
-    UnknownEnumerant,
+    Quux,
+    Corge,
+    Grault,
+    UnknownEnumerant(u16),
 }
 impl CapnpPlainEnum for TestNameAnnotation__NestedStruct__DeeplyNestedEnum {
+    fn encode(self) -> u16 {
+        match self {
+            Self::Quux => 0u16,
+            Self::Corge => 1u16,
+            Self::Grault => 2u16,
+            Self::UnknownEnumerant(x) => x,
+        }
+    }
     fn decode(x: u16) -> Self {
         match x {
-            0..=2u16 => Self::from_u16(x).unwrap(),
-            _ => Self::UnknownEnumerant,
+            0u16 => Self::Quux,
+            1u16 => Self::Corge,
+            2u16 => Self::Grault,
+            x => Self::UnknownEnumerant(x),
         }
     }
 }

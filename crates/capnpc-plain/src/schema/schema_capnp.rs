@@ -11,27 +11,45 @@ use capnp_plain::{
     },
     CapnpPlainEnum, CapnpPlainStruct,
 };
-use num_derive::FromPrimitive;
-use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[derive(FromPrimitive, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub enum ElementSize {
-    Empty = 0isize,
-    Bit = 1isize,
-    Byte = 2isize,
-    TwoBytes = 3isize,
-    FourBytes = 4isize,
-    EightBytes = 5isize,
-    Pointer = 6isize,
-    InlineComposite = 7isize,
-    UnknownEnumerant,
+    Empty,
+    Bit,
+    Byte,
+    TwoBytes,
+    FourBytes,
+    EightBytes,
+    Pointer,
+    InlineComposite,
+    UnknownEnumerant(u16),
 }
 impl CapnpPlainEnum for ElementSize {
+    fn encode(self) -> u16 {
+        match self {
+            Self::Empty => 0u16,
+            Self::Bit => 1u16,
+            Self::Byte => 2u16,
+            Self::TwoBytes => 3u16,
+            Self::FourBytes => 4u16,
+            Self::EightBytes => 5u16,
+            Self::Pointer => 6u16,
+            Self::InlineComposite => 7u16,
+            Self::UnknownEnumerant(x) => x,
+        }
+    }
     fn decode(x: u16) -> Self {
         match x {
-            0..=7u16 => Self::from_u16(x).unwrap(),
-            _ => Self::UnknownEnumerant,
+            0u16 => Self::Empty,
+            1u16 => Self::Bit,
+            2u16 => Self::Byte,
+            3u16 => Self::TwoBytes,
+            4u16 => Self::FourBytes,
+            5u16 => Self::EightBytes,
+            6u16 => Self::Pointer,
+            7u16 => Self::InlineComposite,
+            x => Self::UnknownEnumerant(x),
         }
     }
 }
@@ -243,7 +261,7 @@ impl CapnpPlainStruct for Node__Struct {
     fn update_node(&self, writer: &mut CapnpStructNode) {
         writer.write_u16(7u32, self.data_word_count, 0u16);
         writer.write_u16(12u32, self.pointer_count, 0u16);
-        writer.write_u16(13u32, self.preferred_list_encoding as u16, 0u16);
+        writer.write_u16(13u32, self.preferred_list_encoding.encode(), 0u16);
         writer.write_bool(224u32, self.is_group, false);
         writer.write_u16(15u32, self.discriminant_count, 0u16);
         writer.write_u32(8u32, self.discriminant_offset, 0u32);
