@@ -143,13 +143,13 @@ impl CapnpPlainStruct for TestAllTypes {
         writer.write_u64(3u32, self.u_int_64_field, 0u64);
         writer.write_text(0u32, &self.text_field);
         if let Some(child) = &self.struct_field {
-            writer.write_child(2u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(2u32, child.to_node());
         }
         writer.write_u16(18u32, self.enum_field.encode(), 0u16);
         writer
-            .write_child(
+            .write_list_pointer(
                 17u32,
-                CapnpNode::List(CapnpListNode::write_struct_children(&self.struct_list)),
+                CapnpListNode::write_struct_children(&self.struct_list),
             );
     }
 }
@@ -243,13 +243,13 @@ impl CapnpPlainStruct for TestDefaults {
         writer.write_u64(3u32, self.u_int_64_field, 12345678901234567890u64);
         writer.write_text(0u32, &self.text_field);
         if let Some(child) = &self.struct_field {
-            writer.write_child(2u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(2u32, child.to_node());
         }
         writer.write_u16(18u32, self.enum_field.encode(), 5u16);
         writer
-            .write_child(
+            .write_list_pointer(
                 17u32,
-                CapnpNode::List(CapnpListNode::write_struct_children(&self.struct_list)),
+                CapnpListNode::write_struct_children(&self.struct_list),
             );
     }
 }
@@ -1170,16 +1170,16 @@ impl CapnpPlainStruct for TestUnionDefaults {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         if let Some(child) = &self.s_16_s_8_s_64_s_8_set {
-            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(0u32, child.to_node());
         }
         if let Some(child) = &self.s_0_sps_1_s_32_set {
-            writer.write_child(1u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(1u32, child.to_node());
         }
         if let Some(child) = &self.unnamed_1 {
-            writer.write_child(2u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(2u32, child.to_node());
         }
         if let Some(child) = &self.unnamed_2 {
-            writer.write_child(3u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(3u32, child.to_node());
         }
     }
 }
@@ -1275,7 +1275,7 @@ impl CapnpPlainStruct for TestNestedTypes {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         if let Some(child) = &self.nested_struct {
-            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(0u32, child.to_node());
         }
         writer.write_u16(0u32, self.outer_nested_enum.encode(), 1u16);
         writer.write_u16(1u32, self.inner_nested_enum.encode(), 2u16);
@@ -1426,39 +1426,39 @@ impl CapnpPlainStruct for TestLists {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         writer
-            .write_child(
+            .write_list_pointer(
                 0u32,
-                CapnpNode::List(CapnpListNode::write_struct_children(&self.list_0)),
+                CapnpListNode::write_struct_children(&self.list_0),
             );
         writer
-            .write_child(
+            .write_list_pointer(
                 1u32,
-                CapnpNode::List(CapnpListNode::write_struct_children(&self.list_1)),
+                CapnpListNode::write_struct_children(&self.list_1),
             );
         writer
-            .write_child(
+            .write_list_pointer(
                 2u32,
-                CapnpNode::List(CapnpListNode::write_struct_children(&self.list_8)),
+                CapnpListNode::write_struct_children(&self.list_8),
             );
         writer
-            .write_child(
+            .write_list_pointer(
                 3u32,
-                CapnpNode::List(CapnpListNode::write_struct_children(&self.list_16)),
+                CapnpListNode::write_struct_children(&self.list_16),
             );
         writer
-            .write_child(
+            .write_list_pointer(
                 4u32,
-                CapnpNode::List(CapnpListNode::write_struct_children(&self.list_32)),
+                CapnpListNode::write_struct_children(&self.list_32),
             );
         writer
-            .write_child(
+            .write_list_pointer(
                 5u32,
-                CapnpNode::List(CapnpListNode::write_struct_children(&self.list_64)),
+                CapnpListNode::write_struct_children(&self.list_64),
             );
         writer
-            .write_child(
+            .write_list_pointer(
                 6u32,
-                CapnpNode::List(CapnpListNode::write_struct_children(&self.list_p)),
+                CapnpListNode::write_struct_children(&self.list_p),
             );
     }
 }
@@ -1612,7 +1612,7 @@ impl CapnpPlainStruct for TestListDefaults {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         if let Some(child) = &self.lists {
-            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(0u32, child.to_node());
         }
     }
 }
@@ -1724,7 +1724,7 @@ impl CapnpPlainStruct for TestOldVersion {
         writer.write_i64(0u32, self.old_1, 0i64);
         writer.write_text(0u32, &self.old_2);
         if let Some(child) = &self.old_3 {
-            writer.write_child(1u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(1u32, child.to_node());
         }
     }
 }
@@ -1752,7 +1752,7 @@ impl CapnpPlainStruct for TestNewVersion {
         writer.write_i64(0u32, self.old_1, 0i64);
         writer.write_text(0u32, &self.old_2);
         if let Some(child) = &self.old_3 {
-            writer.write_child(1u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(1u32, child.to_node());
         }
         writer.write_i64(1u32, self.new_1, 987i64);
         writer.write_text(2u32, &self.new_2);
@@ -1945,9 +1945,9 @@ impl CapnpPlainStruct for TestPrintInlineStructs {
     fn update_node(&self, writer: &mut CapnpStructNode) {
         writer.write_text(0u32, &self.some_text);
         writer
-            .write_child(
+            .write_list_pointer(
                 1u32,
-                CapnpNode::List(CapnpListNode::write_struct_children(&self.struct_list)),
+                CapnpListNode::write_struct_children(&self.struct_list),
             );
     }
 }
@@ -1979,13 +1979,10 @@ impl CapnpPlainStruct for TestGenerics_0 {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         if let Some(child) = &self.rev {
-            writer.write_child(1u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(1u32, child.to_node());
         }
         writer
-            .write_child(
-                2u32,
-                CapnpNode::List(CapnpListNode::write_struct_children(&self.list)),
-            );
+            .write_list_pointer(2u32, CapnpListNode::write_struct_children(&self.list));
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -2071,10 +2068,10 @@ impl CapnpPlainStruct for TestGenerics__Inner2 {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         if let Some(child) = &self.inner_bound {
-            writer.write_child(2u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(2u32, child.to_node());
         }
         if let Some(child) = &self.inner_unbound {
-            writer.write_child(3u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(3u32, child.to_node());
         }
     }
 }
@@ -2112,16 +2109,16 @@ impl CapnpPlainStruct for TestGenerics__UseAliases {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         if let Some(child) = &self.inner {
-            writer.write_child(1u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(1u32, child.to_node());
         }
         if let Some(child) = &self.inner_2 {
-            writer.write_child(2u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(2u32, child.to_node());
         }
         if let Some(child) = &self.inner_2_bind {
-            writer.write_child(3u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(3u32, child.to_node());
         }
         if let Some(child) = &self.inner_2_text {
-            writer.write_child(4u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(4u32, child.to_node());
         }
     }
 }
@@ -2151,7 +2148,7 @@ impl CapnpPlainStruct for TestGenericsWrapper {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         if let Some(child) = &self.value {
-            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(0u32, child.to_node());
         }
     }
 }
@@ -2169,7 +2166,7 @@ impl CapnpPlainStruct for TestGenericsWrapper2 {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         if let Some(child) = &self.value {
-            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(0u32, child.to_node());
         }
     }
 }
@@ -2283,62 +2280,62 @@ impl CapnpPlainStruct for TestUseGenerics {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         if let Some(child) = &self.basic {
-            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(0u32, child.to_node());
         }
         if let Some(child) = &self.inner {
-            writer.write_child(1u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(1u32, child.to_node());
         }
         if let Some(child) = &self.inner_2 {
-            writer.write_child(2u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(2u32, child.to_node());
         }
         if let Some(child) = &self.unspecified {
-            writer.write_child(3u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(3u32, child.to_node());
         }
         if let Some(child) = &self.unspecified_inner {
-            writer.write_child(4u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(4u32, child.to_node());
         }
         if let Some(child) = &self.default {
-            writer.write_child(5u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(5u32, child.to_node());
         }
         if let Some(child) = &self.default_inner {
-            writer.write_child(6u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(6u32, child.to_node());
         }
         if let Some(child) = &self.default_user {
-            writer.write_child(7u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(7u32, child.to_node());
         }
         if let Some(child) = &self.wrapper {
-            writer.write_child(8u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(8u32, child.to_node());
         }
         if let Some(child) = &self.default_wrapper {
-            writer.write_child(9u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(9u32, child.to_node());
         }
         if let Some(child) = &self.default_wrapper_2 {
-            writer.write_child(10u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(10u32, child.to_node());
         }
         if let Some(child) = &self.alias_foo {
-            writer.write_child(11u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(11u32, child.to_node());
         }
         if let Some(child) = &self.alias_inner {
-            writer.write_child(12u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(12u32, child.to_node());
         }
         if let Some(child) = &self.alias_inner_2 {
-            writer.write_child(13u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(13u32, child.to_node());
         }
         if let Some(child) = &self.alias_inner_2_bind {
-            writer.write_child(14u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(14u32, child.to_node());
         }
         if let Some(child) = &self.alias_inner_2_text {
-            writer.write_child(15u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(15u32, child.to_node());
         }
         writer.write_text(16u32, &self.alias_rev);
         if let Some(child) = &self.use_aliases {
-            writer.write_child(17u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(17u32, child.to_node());
         }
         if let Some(child) = &self.cap {
-            writer.write_child(18u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(18u32, child.to_node());
         }
         if let Some(child) = &self.bind_enum_list {
-            writer.write_child(20u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(20u32, child.to_node());
         }
     }
 }
@@ -2463,10 +2460,7 @@ impl CapnpPlainStruct for TestTransferCap {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         writer
-            .write_child(
-                0u32,
-                CapnpNode::List(CapnpListNode::write_struct_children(&self.list)),
-            );
+            .write_list_pointer(0u32, CapnpListNode::write_struct_children(&self.list));
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -2497,7 +2491,7 @@ impl CapnpPlainStruct for TestSturdyRef {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         if let Some(child) = &self.host_id {
-            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(0u32, child.to_node());
         }
     }
 }
@@ -2613,7 +2607,7 @@ impl CapnpPlainStruct for TestNameAnnotation__NestedStruct {
     fn update_node(&self, writer: &mut CapnpStructNode) {
         writer.write_bool(0u32, self.bad_nested_field_name, false);
         if let Some(child) = &self.another_bad_nested_field_name {
-            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(0u32, child.to_node());
         }
     }
 }
@@ -2793,14 +2787,12 @@ impl CapnpPlainStruct for TestImpliedFirstField {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         if let Some(child) = &self.text_struct {
-            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(0u32, child.to_node());
         }
         writer
-            .write_child(
+            .write_list_pointer(
                 1u32,
-                CapnpNode::List(
-                    CapnpListNode::write_struct_children(&self.text_struct_list),
-                ),
+                CapnpListNode::write_struct_children(&self.text_struct_list),
             );
     }
 }
@@ -2851,13 +2843,9 @@ impl CapnpPlainStruct for TestCycleBNoCaps {
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
-        writer
-            .write_child(
-                0u32,
-                CapnpNode::List(CapnpListNode::write_struct_children(&self.foo)),
-            );
+        writer.write_list_pointer(0u32, CapnpListNode::write_struct_children(&self.foo));
         if let Some(child) = &self.bar {
-            writer.write_child(1u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(1u32, child.to_node());
         }
     }
 }
@@ -2875,7 +2863,7 @@ impl CapnpPlainStruct for TestCycleANoCaps {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         if let Some(child) = &self.foo {
-            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(0u32, child.to_node());
         }
     }
 }
@@ -2890,11 +2878,7 @@ impl CapnpPlainStruct for TestCycleBWithCaps {
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
-        writer
-            .write_child(
-                0u32,
-                CapnpNode::List(CapnpListNode::write_struct_children(&self.foo)),
-            );
+        writer.write_list_pointer(0u32, CapnpListNode::write_struct_children(&self.foo));
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -2911,7 +2895,7 @@ impl CapnpPlainStruct for TestCycleAWithCaps {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         if let Some(child) = &self.foo {
-            writer.write_child(0u32, CapnpNode::Struct(child.to_node()));
+            writer.write_struct_pointer(0u32, child.to_node());
         }
     }
 }

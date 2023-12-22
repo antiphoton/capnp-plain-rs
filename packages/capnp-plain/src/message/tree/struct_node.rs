@@ -117,8 +117,19 @@ impl StructNode {
             _ => None,
         }
     }
-    pub fn write_child(&mut self, offset: u32, child: Node) {
-        let _ = extend_and_get(&mut self.children, offset as usize).insert(child);
+    pub fn write_struct_pointer(&mut self, offset: u32, child: StructNode) {
+        let _ = extend_and_get(&mut self.children, offset as usize).insert(Node::Struct(child));
+    }
+    pub fn write_list_pointer(&mut self, offset: u32, child: ListNode) {
+        let target = extend_and_get(&mut self.children, offset as usize);
+        if child.is_empty() {
+            target.take();
+        } else {
+            let _ = target.insert(Node::List(child));
+        }
+    }
+    pub fn remove_pointer(&mut self, offset: u32) {
+        extend_and_get(&mut self.children, offset as usize).take();
     }
 }
 
@@ -281,6 +292,21 @@ mod tests {
         assert_eq!(x.read_text(1), "01234567");
         assert_eq!(x.read_text(2), "012345678");
         assert_eq!(x.read_text(3), "ABC");
+    }
+    #[test]
+    fn empty_text_child() {
+        let mut x = StructNode::new();
+        x.write_text(0, "ABC");
+        x.write_text(0, "");
+        let x = build_node(x);
+        assert_eq!(
+            x,
+            StructNodeSerializer {
+                head: Word([0, 0, 0, 0, 0, 0, 0, 0]),
+                stack: vec![],
+                heap: vec![],
+            }
+        );
     }
     #[test]
     fn builds_struct_child() {
