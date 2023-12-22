@@ -8,7 +8,6 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.75"
 capnp-plain = { path = "../capnp-plain" }
-capnpc-plain = { path = "../capnpc-plain" }
 num-derive = "0.4.1"
 num-traits = "0.2.17"
 serde = { version = "1.0.193", features = [ "derive" ]}
