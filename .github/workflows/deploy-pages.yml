@@ -18,6 +18,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/cache-cargo
       - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
       - run: cargo doc --workspace --exclude capnp-plain-golden
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
