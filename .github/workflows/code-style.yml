@@ -17,6 +17,4 @@ jobs:
             toolchain: stable
             components: rustfmt, clippy
       - run: cargo fmt -- --check
-        working-directory: crates
       - run: cargo clippy -- -D warnings
-        working-directory: crates
