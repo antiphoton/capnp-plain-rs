@@ -20,17 +20,17 @@ jobs:
         with:
           toolchain: stable
       - name: Check self-hosting
-        working-directory: crates/capnpc-plain/src/schema
+        working-directory: packages/capnpc-plain/src/schema
         run: |
           cp schema_capnp.rs schema_capnp_main.rs
           sh build.sh
           diff schema_capnp_main.rs schema_capnp.rs
       - name: Check golden schema
-        working-directory: crates/golden/src/schema
+        working-directory: packages/golden/src/schema
         run: |
           cp test_capnp.rs test_capnp_main.rs
           sh build.sh
           diff test_capnp_main.rs test_capnp.rs
       - name: Golden test
-        working-directory: crates/golden
+        working-directory: packages/golden
         run: cargo test
