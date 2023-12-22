@@ -174,7 +174,7 @@ fn write_list(offset: u32, ty: &Type, value: TokenStream) -> Option<TokenStream>
         _ => return None,
     };
     let writer = format_ident!("writer");
-    let r = quote!(#writer.write_child(#offset, CapnpNode::List(#value)););
+    let r = quote!(#writer.write_list_pointer(#offset, #value););
     Some(r)
 }
 
@@ -211,7 +211,7 @@ fn write_slot(slot: &Field__Slot, value: TokenStream, is_box: bool) -> Option<To
             if is_box {
                 quote! {
                     if let Some(child) = &#value {
-                        #writer.write_child(#offset, CapnpNode::Struct(child.to_node()));
+                        #writer.write_struct_pointer(#offset, child.to_node());
                     }
                 }
             } else {

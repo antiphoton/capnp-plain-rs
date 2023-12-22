@@ -1,7 +1,4 @@
-use crate::{
-    message::tree::{list_node::ListNode, Node},
-    util::array::extend_and_get,
-};
+use crate::{message::tree::list_node::ListNode, util::array::extend_and_get};
 
 use super::StructNode;
 
@@ -77,9 +74,13 @@ define_big_writer!(write_f64, f64);
 
 impl StructNode {
     pub fn write_text(&mut self, offset: u32, data: &str) {
-        let mut data = data.to_string().into_bytes();
-        data.push(0);
-        let child = ListNode::write_u8_children(&data);
-        self.write_child(offset, Node::List(child));
+        if data.is_empty() {
+            self.remove_pointer(offset);
+        } else {
+            let mut data = data.to_string().into_bytes();
+            data.push(0);
+            let child = ListNode::write_u8_children(&data);
+            self.write_list_pointer(offset, child);
+        }
     }
 }
