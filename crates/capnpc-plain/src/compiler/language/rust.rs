@@ -229,7 +229,7 @@ fn write_slot(slot: &Field__Slot, value: TokenStream, is_box: bool) -> Option<To
                 Value::Enum(x) => *x,
                 _ => 0,
             };
-            quote!(#writer.write_u16(#offset, #value as u16, #default_value);)
+            quote!(#writer.write_u16(#offset, #value.encode(), #default_value);)
         }
         _ => return None,
     };
@@ -497,30 +497,47 @@ fn generate_node_struct(
 }
 
 fn generate_node_enum(name: &str, node_enum: &Node__Enum) -> TokenStream {
-    let definitions: Vec<_> = node_enum
+    let variants: Vec<_> = node_enum
         .enumerants
         .iter()
         .map(|enumerant| {
             let name = format_ident!("{}", enumerant.name.to_case(Case::UpperCamel));
-            let value = enumerant.code_order as isize;
-            quote!(#name = #value,)
+            let value = enumerant.code_order;
+            (name, value)
         })
         .collect();
+    let definitions: Vec<_> = variants
+        .iter()
+        .map(|(name, _value)| quote!(#name,))
+        .collect();
+    let encoders: Vec<_> = variants
+        .iter()
+        .map(|(name, value)| quote!(Self::#name => #value,))
+        .collect();
+    let decoders: Vec<_> = variants
+        .iter()
+        .map(|(name, value)| quote!(#value => Self::#name,))
+        .collect();
     let name = format_ident!("{}", name);
-    let max = node_enum.enumerants.len() as u16 - 1;
     quote!(
         #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-        #[derive(FromPrimitive, Serialize, Deserialize)]
+        #[derive(Serialize, Deserialize)]
         pub enum #name {
             #(#definitions)*
-            UnknownEnumerant,
+            UnknownEnumerant(u16),
         }
 
         impl CapnpPlainEnum for #name {
+            fn encode(self) -> u16 {
+                match self {
+                    #(#encoders)*
+                    Self::UnknownEnumerant(x) => x,
+                }
+            }
             fn decode(x: u16) -> Self {
                 match x {
-                    0..=#max => Self::from_u16(x).unwrap(),
-                    _ => Self::UnknownEnumerant,
+                    #(#decoders)*
+                    x => Self::UnknownEnumerant(x),
                 }
             }
         }
@@ -563,8 +580,6 @@ pub fn compile(code_generator_request: &CodeGeneratorRequest) -> Result<()> {
             },
             CapnpPlainEnum, CapnpPlainStruct,
         };
-        use num_derive::FromPrimitive;
-        use num_traits::FromPrimitive;
         use serde::{Deserialize, Serialize};
         #tokens
     };
