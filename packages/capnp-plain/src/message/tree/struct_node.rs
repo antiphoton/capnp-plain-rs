@@ -7,6 +7,7 @@ use crate::{
         Message,
     },
     pointer::struct_pointer::StructPointer,
+    util::array::extend_and_get,
 };
 
 use super::{list_node::ListNode, Node};
@@ -117,9 +118,7 @@ impl StructNode {
         }
     }
     pub fn write_child(&mut self, offset: u32, child: Node) {
-        let offset = offset as usize;
-        self.children.resize_with(offset + 1, || None);
-        self.children[offset] = Some(child);
+        let _ = extend_and_get(&mut self.children, offset as usize).insert(child);
     }
 }
 
@@ -248,9 +247,9 @@ mod tests {
     #[test]
     fn builds_and_reads_text_child() {
         let mut x = StructNode::new();
-        x.write_text(0, "0123456");
         x.write_text(1, "01234567");
         x.write_text(2, "012345678");
+        x.write_text(0, "0123456");
         x.write_text(3, "ABC");
         let x = build_node(x);
         assert_eq!(

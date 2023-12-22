@@ -1,6 +1,6 @@
-use crate::message::{
-    tree::{list_node::ListNode, Node},
-    word::Word,
+use crate::{
+    message::tree::{list_node::ListNode, Node},
+    util::array::extend_and_get,
 };
 
 use super::StructNode;
@@ -12,7 +12,7 @@ macro_rules! define_byte_writer {
                 let byte_offset = std::mem::size_of::<$t>() * offset as usize;
                 let i = byte_offset / 8;
                 let j = byte_offset % 8;
-                let word = self.extend_and_get(i);
+                let word = extend_and_get(&mut self.data, i);
                 word.0[j] = (value ^ default_value) as u8;
             }
         }
@@ -21,17 +21,17 @@ macro_rules! define_byte_writer {
 
 macro_rules! define_small_writer {
     ($name:ident, $t:ty, $($i:expr),+) => {
-      impl StructNode {
-        pub fn $name(&mut self, offset: u32, value: $t, default_value: $t) {
-            let byte_offset = std::mem::size_of::<$t>() * offset as usize;
-            let i = byte_offset / 8;
-            let j = byte_offset % 8;
-            let word = self.extend_and_get(i);
-            let value = value.to_le_bytes();
-            let default_value = default_value.to_le_bytes();
-            $(word.0[j + $i] = value[$i] ^ default_value[$i];)+
+        impl StructNode {
+            pub fn $name(&mut self, offset: u32, value: $t, default_value: $t) {
+                let byte_offset = std::mem::size_of::<$t>() * offset as usize;
+                let i = byte_offset / 8;
+                let j = byte_offset % 8;
+                let word = extend_and_get(&mut self.data, i);
+                let value = value.to_le_bytes();
+                let default_value = default_value.to_le_bytes();
+                $(word.0[j + $i] = value[$i] ^ default_value[$i];)+
+            }
         }
-      }
     };
 }
 
@@ -39,7 +39,7 @@ macro_rules! define_big_writer {
     ($name:ident, $t:ty) => {
         impl StructNode {
             pub fn $name(&mut self, offset: u32, value: $t, default_value: $t) {
-                let word = self.extend_and_get(offset as usize);
+                let word = extend_and_get(&mut self.data, offset as usize);
                 let value = <u64>::from_ne_bytes(value.to_ne_bytes());
                 let default_value = <u64>::from_ne_bytes(default_value.to_ne_bytes());
                 word.0 = (value ^ default_value).to_le_bytes();
@@ -49,21 +49,13 @@ macro_rules! define_big_writer {
 }
 
 impl StructNode {
-    fn extend_and_get(&mut self, i: usize) -> &mut Word {
-        if i < self.data.len() {
-            &mut self.data[i]
-        } else {
-            self.data.resize_with(i + 1, Default::default);
-            self.data.last_mut().unwrap()
-        }
-    }
     pub fn write_bool(&mut self, offset: u32, value: bool, default_value: bool) {
         if value == default_value {
             return;
         }
         let offset = offset as usize;
         let i = offset / 64;
-        let word = self.extend_and_get(i);
+        let word = extend_and_get(&mut self.data, i);
         let j = (offset % 64) / 8;
         let k = offset % 8;
         word.0[j] ^= 1 << k;
