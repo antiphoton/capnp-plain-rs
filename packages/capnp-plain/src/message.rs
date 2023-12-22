@@ -27,6 +27,14 @@ impl Message {
             segments: vec![Segment { words }],
         }
     }
+    pub fn as_flat(&self) -> Option<&[Word]> {
+        if self.segments.len() == 1 {
+            let segment = &self.segments[0];
+            Some(&segment.words)
+        } else {
+            None
+        }
+    }
     pub fn from_bytes(input: &[u8], options: EncodingOptions) -> Self {
         let words = if options.pack {
             Word::from_packed_bytes(input)
