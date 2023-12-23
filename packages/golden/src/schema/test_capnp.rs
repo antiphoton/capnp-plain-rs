@@ -351,7 +351,6 @@ impl CapnpPlainStruct for TestUnion {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestUnion__Union0 {
     U0F0S0,
     U0F0S1(bool),
@@ -449,7 +448,6 @@ impl CapnpPlainStruct for TestUnion__Union0 {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestUnion__Union1 {
     U1F0S0,
     U1F0S1(bool),
@@ -583,7 +581,6 @@ impl CapnpPlainStruct for TestUnion__Union1 {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestUnion__Union2 {
     U2F0S1(bool),
     U2F0S8(i8),
@@ -633,7 +630,6 @@ impl CapnpPlainStruct for TestUnion__Union2 {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestUnion__Union3 {
     U3F0S1(bool),
     U3F0S8(i8),
@@ -703,7 +699,6 @@ impl CapnpPlainStruct for TestUnnamedUnion_0 {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestUnnamedUnion_1 {
     Foo(u16),
     Bar(u32),
@@ -749,7 +744,6 @@ impl CapnpPlainStruct for TestUnnamedUnion {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestUnionInUnion__Outer__Inner {
     Foo(i32),
     Bar(i32),
@@ -793,7 +787,6 @@ impl CapnpPlainStruct for TestUnionInUnion {
     fn update_node(&self, writer: &mut CapnpStructNode) {}
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestUnionInUnion__Outer {
     Inner(TestUnionInUnion__Outer__Inner),
     Baz(i32),
@@ -897,7 +890,6 @@ impl CapnpPlainStruct for TestGroups {
     fn update_node(&self, writer: &mut CapnpStructNode) {}
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestGroups__Groups {
     Foo(TestGroups__Groups__Foo),
     Baz(TestGroups__Groups__Baz),
@@ -992,7 +984,6 @@ impl CapnpPlainStruct for TestInterleavedGroups__Group1_0 {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestInterleavedGroups__Group1_1 {
     Qux(u16),
     Corge(TestInterleavedGroups__Group1__Corge),
@@ -1090,7 +1081,6 @@ impl CapnpPlainStruct for TestInterleavedGroups__Group2_0 {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestInterleavedGroups__Group2_1 {
     Qux(u16),
     Corge(TestInterleavedGroups__Group2__Corge),
@@ -1641,7 +1631,6 @@ impl CapnpPlainStruct for TestLateUnion {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestLateUnion__TheUnion {
     Qux(String),
     Corge(Vec<i32>),
@@ -1673,7 +1662,6 @@ impl CapnpPlainStruct for TestLateUnion__TheUnion {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestLateUnion__AnotherUnion {
     Qux(String),
     Corge(Vec<i32>),
@@ -1759,7 +1747,6 @@ impl CapnpPlainStruct for TestNewVersion {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestOldUnionVersion {
     A,
     B(u64),
@@ -1788,7 +1775,6 @@ impl CapnpPlainStruct for TestOldUnionVersion {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestNewUnionVersion {
     A(TestNewUnionVersion__A),
     B(u64),
@@ -1820,7 +1806,6 @@ impl CapnpPlainStruct for TestNewUnionVersion {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestNewUnionVersion__A {
     A0,
     A1(u64),
@@ -1878,7 +1863,6 @@ impl CapnpPlainStruct for TestStructUnion {
     fn update_node(&self, writer: &mut CapnpStructNode) {}
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestStructUnion__Un {
     Struct(TestStructUnion__SomeStruct),
     Object(TestAnyPointer),
@@ -1986,7 +1970,6 @@ impl CapnpPlainStruct for TestGenerics_0 {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestGenerics_1 {
     Uv,
     Ug(TestGenerics__Ug),
@@ -2171,7 +2154,6 @@ impl CapnpPlainStruct for TestGenericsWrapper2 {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestGenericsUnion {
     Foo(),
     Bar(),
@@ -2630,7 +2612,6 @@ impl CapnpPlainStruct for TestNameAnnotation_0 {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestNameAnnotation_1 {
     BadFieldName(bool),
     Bar(i8),
@@ -2676,7 +2657,6 @@ impl CapnpPlainStruct for TestNameAnnotation {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum TestNameAnnotation__BadlyNamedUnion {
     BadlyNamedGroup(TestNameAnnotation__BadlyNamedUnion__BadlyNamedGroup),
     Baz(TestNameAnnotation__NestedStruct),
