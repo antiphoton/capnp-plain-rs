@@ -546,51 +546,51 @@ impl CapnpPlainStruct for Value {
         let discriminant_value = match self {
             Self::Void => 0u16,
             Self::Bool(value) => {
-                writer.write_bool(16u32, *value, false);
+                writer.write_bool(16u32, (*value), false);
                 1u16
             }
             Self::Int8(value) => {
-                writer.write_i8(2u32, *value, 0i8);
+                writer.write_i8(2u32, (*value), 0i8);
                 2u16
             }
             Self::Int16(value) => {
-                writer.write_i16(1u32, *value, 0i16);
+                writer.write_i16(1u32, (*value), 0i16);
                 3u16
             }
             Self::Int32(value) => {
-                writer.write_i32(1u32, *value, 0i32);
+                writer.write_i32(1u32, (*value), 0i32);
                 4u16
             }
             Self::Int64(value) => {
-                writer.write_i64(1u32, *value, 0i64);
+                writer.write_i64(1u32, (*value), 0i64);
                 5u16
             }
             Self::Uint8(value) => {
-                writer.write_u8(2u32, *value, 0u8);
+                writer.write_u8(2u32, (*value), 0u8);
                 6u16
             }
             Self::Uint16(value) => {
-                writer.write_u16(1u32, *value, 0u16);
+                writer.write_u16(1u32, (*value), 0u16);
                 7u16
             }
             Self::Uint32(value) => {
-                writer.write_u32(1u32, *value, 0u32);
+                writer.write_u32(1u32, (*value), 0u32);
                 8u16
             }
             Self::Uint64(value) => {
-                writer.write_u64(1u32, *value, 0u64);
+                writer.write_u64(1u32, (*value), 0u64);
                 9u16
             }
             Self::Float32(..) => 10u16,
             Self::Float64(..) => 11u16,
             Self::Text(value) => {
-                writer.write_text(0u32, &*value);
+                writer.write_text(0u32, &(*value));
                 12u16
             }
             Self::Data(..) => 13u16,
             Self::List(..) => 14u16,
             Self::Enum(value) => {
-                writer.write_u16(1u32, *value, 0u16);
+                writer.write_u16(1u32, (*value), 0u16);
                 15u16
             }
             Self::Struct(..) => 16u16,
@@ -785,7 +785,7 @@ impl CapnpPlainStruct for Brand__Scope_1 {
                 writer
                     .write_list_pointer(
                         0u32,
-                        CapnpListNode::write_struct_children(&*value),
+                        CapnpListNode::write_struct_children(&(*value)),
                     );
                 0u16
             }
@@ -1075,7 +1075,7 @@ impl CapnpPlainStruct for Field__Ordinal {
         let discriminant_value = match self {
             Self::Implicit => 0u16,
             Self::Explicit(value) => {
-                writer.write_u16(6u32, *value, 0u16);
+                writer.write_u16(6u32, (*value), 0u16);
                 1u16
             }
             _ => {

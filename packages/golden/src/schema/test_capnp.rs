@@ -392,52 +392,52 @@ impl CapnpPlainStruct for TestUnion__Union0 {
         let discriminant_value = match self {
             Self::U0F0S0 => 0u16,
             Self::U0F0S1(value) => {
-                writer.write_bool(64u32, *value, false);
+                writer.write_bool(64u32, (*value), false);
                 1u16
             }
             Self::U0F0S8(value) => {
-                writer.write_i8(8u32, *value, 0i8);
+                writer.write_i8(8u32, (*value), 0i8);
                 2u16
             }
             Self::U0F0S16(value) => {
-                writer.write_i16(4u32, *value, 0i16);
+                writer.write_i16(4u32, (*value), 0i16);
                 3u16
             }
             Self::U0F0S32(value) => {
-                writer.write_i32(2u32, *value, 0i32);
+                writer.write_i32(2u32, (*value), 0i32);
                 4u16
             }
             Self::U0F0S64(value) => {
-                writer.write_i64(1u32, *value, 0i64);
+                writer.write_i64(1u32, (*value), 0i64);
                 5u16
             }
             Self::U0F0Sp(value) => {
-                writer.write_text(0u32, &*value);
+                writer.write_text(0u32, &(*value));
                 6u16
             }
             Self::U0F1S0 => 7u16,
             Self::U0F1S1(value) => {
-                writer.write_bool(64u32, *value, false);
+                writer.write_bool(64u32, (*value), false);
                 8u16
             }
             Self::U0F1S8(value) => {
-                writer.write_i8(8u32, *value, 0i8);
+                writer.write_i8(8u32, (*value), 0i8);
                 9u16
             }
             Self::U0F1S16(value) => {
-                writer.write_i16(4u32, *value, 0i16);
+                writer.write_i16(4u32, (*value), 0i16);
                 10u16
             }
             Self::U0F1S32(value) => {
-                writer.write_i32(2u32, *value, 0i32);
+                writer.write_i32(2u32, (*value), 0i32);
                 11u16
             }
             Self::U0F1S64(value) => {
-                writer.write_i64(1u32, *value, 0i64);
+                writer.write_i64(1u32, (*value), 0i64);
                 12u16
             }
             Self::U0F1Sp(value) => {
-                writer.write_text(0u32, &*value);
+                writer.write_text(0u32, &(*value));
                 13u16
             }
             _ => {
@@ -501,76 +501,76 @@ impl CapnpPlainStruct for TestUnion__Union1 {
         let discriminant_value = match self {
             Self::U1F0S0 => 0u16,
             Self::U1F0S1(value) => {
-                writer.write_bool(129u32, *value, false);
+                writer.write_bool(129u32, (*value), false);
                 1u16
             }
             Self::U1F1S1(value) => {
-                writer.write_bool(129u32, *value, false);
+                writer.write_bool(129u32, (*value), false);
                 2u16
             }
             Self::U1F0S8(value) => {
-                writer.write_i8(17u32, *value, 0i8);
+                writer.write_i8(17u32, (*value), 0i8);
                 3u16
             }
             Self::U1F1S8(value) => {
-                writer.write_i8(17u32, *value, 0i8);
+                writer.write_i8(17u32, (*value), 0i8);
                 4u16
             }
             Self::U1F0S16(value) => {
-                writer.write_i16(9u32, *value, 0i16);
+                writer.write_i16(9u32, (*value), 0i16);
                 5u16
             }
             Self::U1F1S16(value) => {
-                writer.write_i16(9u32, *value, 0i16);
+                writer.write_i16(9u32, (*value), 0i16);
                 6u16
             }
             Self::U1F0S32(value) => {
-                writer.write_i32(5u32, *value, 0i32);
+                writer.write_i32(5u32, (*value), 0i32);
                 7u16
             }
             Self::U1F1S32(value) => {
-                writer.write_i32(5u32, *value, 0i32);
+                writer.write_i32(5u32, (*value), 0i32);
                 8u16
             }
             Self::U1F0S64(value) => {
-                writer.write_i64(3u32, *value, 0i64);
+                writer.write_i64(3u32, (*value), 0i64);
                 9u16
             }
             Self::U1F1S64(value) => {
-                writer.write_i64(3u32, *value, 0i64);
+                writer.write_i64(3u32, (*value), 0i64);
                 10u16
             }
             Self::U1F0Sp(value) => {
-                writer.write_text(1u32, &*value);
+                writer.write_text(1u32, &(*value));
                 11u16
             }
             Self::U1F1Sp(value) => {
-                writer.write_text(1u32, &*value);
+                writer.write_text(1u32, &(*value));
                 12u16
             }
             Self::U1F2S0 => 13u16,
             Self::U1F2S1(value) => {
-                writer.write_bool(129u32, *value, false);
+                writer.write_bool(129u32, (*value), false);
                 14u16
             }
             Self::U1F2S8(value) => {
-                writer.write_i8(17u32, *value, 0i8);
+                writer.write_i8(17u32, (*value), 0i8);
                 15u16
             }
             Self::U1F2S16(value) => {
-                writer.write_i16(9u32, *value, 0i16);
+                writer.write_i16(9u32, (*value), 0i16);
                 16u16
             }
             Self::U1F2S32(value) => {
-                writer.write_i32(5u32, *value, 0i32);
+                writer.write_i32(5u32, (*value), 0i32);
                 17u16
             }
             Self::U1F2S64(value) => {
-                writer.write_i64(3u32, *value, 0i64);
+                writer.write_i64(3u32, (*value), 0i64);
                 18u16
             }
             Self::U1F2Sp(value) => {
-                writer.write_text(1u32, &*value);
+                writer.write_text(1u32, &(*value));
                 19u16
             }
             _ => {
@@ -603,23 +603,23 @@ impl CapnpPlainStruct for TestUnion__Union2 {
     fn update_node(&self, writer: &mut CapnpStructNode) {
         let discriminant_value = match self {
             Self::U2F0S1(value) => {
-                writer.write_bool(256u32, *value, false);
+                writer.write_bool(256u32, (*value), false);
                 0u16
             }
             Self::U2F0S8(value) => {
-                writer.write_i8(33u32, *value, 0i8);
+                writer.write_i8(33u32, (*value), 0i8);
                 1u16
             }
             Self::U2F0S16(value) => {
-                writer.write_i16(18u32, *value, 0i16);
+                writer.write_i16(18u32, (*value), 0i16);
                 2u16
             }
             Self::U2F0S32(value) => {
-                writer.write_i32(10u32, *value, 0i32);
+                writer.write_i32(10u32, (*value), 0i32);
                 3u16
             }
             Self::U2F0S64(value) => {
-                writer.write_i64(6u32, *value, 0i64);
+                writer.write_i64(6u32, (*value), 0i64);
                 4u16
             }
             _ => {
@@ -652,23 +652,23 @@ impl CapnpPlainStruct for TestUnion__Union3 {
     fn update_node(&self, writer: &mut CapnpStructNode) {
         let discriminant_value = match self {
             Self::U3F0S1(value) => {
-                writer.write_bool(257u32, *value, false);
+                writer.write_bool(257u32, (*value), false);
                 0u16
             }
             Self::U3F0S8(value) => {
-                writer.write_i8(34u32, *value, 0i8);
+                writer.write_i8(34u32, (*value), 0i8);
                 1u16
             }
             Self::U3F0S16(value) => {
-                writer.write_i16(19u32, *value, 0i16);
+                writer.write_i16(19u32, (*value), 0i16);
                 2u16
             }
             Self::U3F0S32(value) => {
-                writer.write_i32(11u32, *value, 0i32);
+                writer.write_i32(11u32, (*value), 0i32);
                 3u16
             }
             Self::U3F0S64(value) => {
-                writer.write_i64(7u32, *value, 0i64);
+                writer.write_i64(7u32, (*value), 0i64);
                 4u16
             }
             _ => {
@@ -715,11 +715,11 @@ impl CapnpPlainStruct for TestUnnamedUnion_1 {
     fn update_node(&self, writer: &mut CapnpStructNode) {
         let discriminant_value = match self {
             Self::Foo(value) => {
-                writer.write_u16(0u32, *value, 0u16);
+                writer.write_u16(0u32, (*value), 0u16);
                 0u16
             }
             Self::Bar(value) => {
-                writer.write_u32(2u32, *value, 0u32);
+                writer.write_u32(2u32, (*value), 0u32);
                 1u16
             }
             _ => {
@@ -760,11 +760,11 @@ impl CapnpPlainStruct for TestUnionInUnion__Outer__Inner {
     fn update_node(&self, writer: &mut CapnpStructNode) {
         let discriminant_value = match self {
             Self::Foo(value) => {
-                writer.write_i32(0u32, *value, 0i32);
+                writer.write_i32(0u32, (*value), 0i32);
                 0u16
             }
             Self::Bar(value) => {
-                writer.write_i32(0u32, *value, 0i32);
+                writer.write_i32(0u32, (*value), 0i32);
                 1u16
             }
             _ => {
@@ -807,7 +807,7 @@ impl CapnpPlainStruct for TestUnionInUnion__Outer {
                 0u16
             }
             Self::Baz(value) => {
-                writer.write_i32(0u32, *value, 0i32);
+                writer.write_i32(0u32, (*value), 0i32);
                 1u16
             }
             _ => {
@@ -1002,7 +1002,7 @@ impl CapnpPlainStruct for TestInterleavedGroups__Group1_1 {
     fn update_node(&self, writer: &mut CapnpStructNode) {
         let discriminant_value = match self {
             Self::Qux(value) => {
-                writer.write_u16(12u32, *value, 0u16);
+                writer.write_u16(12u32, (*value), 0u16);
                 0u16
             }
             Self::Corge(value) => {
@@ -1010,7 +1010,7 @@ impl CapnpPlainStruct for TestInterleavedGroups__Group1_1 {
                 1u16
             }
             Self::Fred(value) => {
-                writer.write_text(2u32, &*value);
+                writer.write_text(2u32, &(*value));
                 2u16
             }
             _ => {
@@ -1099,7 +1099,7 @@ impl CapnpPlainStruct for TestInterleavedGroups__Group2_1 {
     fn update_node(&self, writer: &mut CapnpStructNode) {
         let discriminant_value = match self {
             Self::Qux(value) => {
-                writer.write_u16(13u32, *value, 0u16);
+                writer.write_u16(13u32, (*value), 0u16);
                 0u16
             }
             Self::Corge(value) => {
@@ -1107,7 +1107,7 @@ impl CapnpPlainStruct for TestInterleavedGroups__Group2_1 {
                 1u16
             }
             Self::Fred(value) => {
-                writer.write_text(3u32, &*value);
+                writer.write_text(3u32, &(*value));
                 2u16
             }
             _ => {
@@ -1649,7 +1649,7 @@ impl CapnpPlainStruct for TestLateUnion__TheUnion {
     fn update_node(&self, writer: &mut CapnpStructNode) {
         let discriminant_value = match self {
             Self::Qux(value) => {
-                writer.write_text(1u32, &*value);
+                writer.write_text(1u32, &(*value));
                 0u16
             }
             Self::Corge(..) => 1u16,
@@ -1680,7 +1680,7 @@ impl CapnpPlainStruct for TestLateUnion__AnotherUnion {
     fn update_node(&self, writer: &mut CapnpStructNode) {
         let discriminant_value = match self {
             Self::Qux(value) => {
-                writer.write_text(2u32, &*value);
+                writer.write_text(2u32, &(*value));
                 0u16
             }
             Self::Corge(..) => 1u16,
@@ -1764,7 +1764,7 @@ impl CapnpPlainStruct for TestOldUnionVersion {
         let discriminant_value = match self {
             Self::A => 0u16,
             Self::B(value) => {
-                writer.write_u64(1u32, *value, 0u64);
+                writer.write_u64(1u32, (*value), 0u64);
                 1u16
             }
             _ => {
@@ -1795,7 +1795,7 @@ impl CapnpPlainStruct for TestNewUnionVersion {
                 0u16
             }
             Self::B(value) => {
-                writer.write_u64(1u32, *value, 0u64);
+                writer.write_u64(1u32, (*value), 0u64);
                 1u16
             }
             _ => {
@@ -1823,7 +1823,7 @@ impl CapnpPlainStruct for TestNewUnionVersion__A {
         let discriminant_value = match self {
             Self::A0 => 0u16,
             Self::A1(value) => {
-                writer.write_u64(2u32, *value, 0u64);
+                writer.write_u64(2u32, (*value), 0u64);
                 1u16
             }
             _ => {
@@ -2628,11 +2628,11 @@ impl CapnpPlainStruct for TestNameAnnotation_1 {
     fn update_node(&self, writer: &mut CapnpStructNode) {
         let discriminant_value = match self {
             Self::BadFieldName(value) => {
-                writer.write_bool(0u32, *value, false);
+                writer.write_bool(0u32, (*value), false);
                 0u16
             }
             Self::Bar(value) => {
-                writer.write_i8(0u32, *value, 0i8);
+                writer.write_i8(0u32, (*value), 0i8);
                 1u16
             }
             _ => {

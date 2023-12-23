@@ -401,7 +401,7 @@ fn generate_variant_struct(
                             Self::#field_name => #i,
                         });
                     };
-                    if let Some(p) = write_slot(slot, quote!(*value), false) {
+                    if let Some(p) = write_slot(slot, quote!((*value)), false) {
                         Some(quote! {
                             Self::#field_name(value) => {
                                 #p

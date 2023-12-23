@@ -16,3 +16,6 @@ cd src
 export RUST_BACKTRACE=1
 $CAPNP_TOOL compile -o- -I. ./capnp/test.capnp | $CAPNPC_RUST
 mv ./capnp/test_capnp.rs $TARGET
+
+cd $TARGET
+$CAPNP_TOOL compile -o- ./example.capnp | $CAPNPC_RUST
