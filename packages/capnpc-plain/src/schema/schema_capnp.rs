@@ -83,7 +83,6 @@ impl CapnpPlainStruct for Field_0 {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum Field_1 {
     Slot(Field__Slot),
     Group(Field__Group),
@@ -173,7 +172,6 @@ impl CapnpPlainStruct for Node_0 {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum Node_1 {
     File,
     Struct(Node__Struct),
@@ -409,7 +407,6 @@ impl CapnpPlainStruct for Node__Interface {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum Type {
     Void,
     Bool,
@@ -501,7 +498,6 @@ impl CapnpPlainStruct for Type {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum Value {
     Void,
     Bool(bool),
@@ -768,7 +764,6 @@ impl CapnpPlainStruct for Brand__Scope_0 {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum Brand__Scope_1 {
     Bind(Vec<Brand__Binding>),
     Inherit,
@@ -817,7 +812,6 @@ impl CapnpPlainStruct for Brand__Scope {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum Brand__Binding {
     Unbound,
     Type(Type),
@@ -916,7 +910,6 @@ impl CapnpPlainStruct for Type__Interface {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum Type__AnyPointer__Unconstrained {
     AnyKind,
     Struct,
@@ -979,7 +972,6 @@ impl CapnpPlainStruct for Type__AnyPointer__ImplicitMethodParameter {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum Type__AnyPointer {
     Unconstrained(Type__AnyPointer__Unconstrained),
     Parameter(Type__AnyPointer__Parameter),
@@ -1066,7 +1058,6 @@ impl CapnpPlainStruct for Field__Group {
     }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "t", content = "c")]
 pub enum Field__Ordinal {
     Implicit,
     Explicit(u16),
