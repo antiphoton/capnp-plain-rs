@@ -53,6 +53,28 @@ impl Word {
         }
         output
     }
+    pub fn to_packed_bytes(input: &[u8]) -> Vec<u8> {
+        let mut output = vec![];
+        for word in input.chunks_exact(8) {
+            let mut tag = 0u8;
+            let mut y = Vec::with_capacity(8);
+            for (i, x) in word.iter().enumerate() {
+                if *x > 0 {
+                    tag |= 1 << i;
+                    y.push(*x)
+                }
+            }
+            output.push(tag);
+            if tag == 0 {
+                output.push(0);
+            }
+            output.append(&mut y);
+            if tag == 0xff {
+                output.push(0);
+            }
+        }
+        output
+    }
 }
 
 fn take_word(input: &mut impl Iterator<Item = u8>) -> Word {
@@ -72,5 +94,23 @@ impl std::fmt::Debug for Word {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let a: Vec<_> = self.0.iter().map(|x| format!("{:02x}", x)).collect();
         write!(f, "[{}]", a.join(" "))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn packing() {
+        assert_eq!(
+            Word::to_packed_bytes(&[8, 0, 0, 0, 3, 0, 2, 0, 0x19, 0, 0, 0, 0xaa, 1, 0, 0]),
+            vec![0x51, 8, 3, 2, 0x31, 0x19, 0xaa, 1]
+        );
+        assert_eq!(Word::to_packed_bytes(&[0; 16]), vec![0, 0, 0, 0]);
+        assert_eq!(
+            Word::to_packed_bytes(&[0x8a; 8]),
+            vec![0xff, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0]
+        );
     }
 }

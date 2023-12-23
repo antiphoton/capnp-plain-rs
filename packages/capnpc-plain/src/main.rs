@@ -22,7 +22,7 @@ fn main() -> Result<()> {
             pack: false,
         },
     );
-    let code_generator_request = message.read_root::<CodeGeneratorRequest>()?;
+    let code_generator_request = message.to_root::<CodeGeneratorRequest>()?;
     compile(&code_generator_request)?;
     Ok(())
 }
