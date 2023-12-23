@@ -14,4 +14,4 @@ prettyplease = "0.2.15"
 proc-macro2 = "1.0.71"
 quote = "1.0.33"
 serde = { version = "1.0.193", features = [ "derive" ]}
-syn = "2.0.41"
+syn = "2.0.42"
