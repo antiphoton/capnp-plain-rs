@@ -11,7 +11,7 @@ capnp-plain = { path = "../capnp-plain" }
 convert_case = "0.6.0"
 once_cell = "1.19.0"
 prettyplease = "0.2.16"
-proc-macro2 = "1.0.71"
+proc-macro2 = "1.0.76"
 quote = "1.0.33"
 serde = { version = "1.0.193", features = [ "derive" ]}
 syn = "2.0.42"
