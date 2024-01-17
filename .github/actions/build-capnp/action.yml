@@ -9,7 +9,7 @@ runs:
       run: |
         capnp_sha=$(git -C third_party/capnproto/ rev-parse HEAD)
         echo "CAPNP_COMMIT_SHA=$capnp_sha" >> "$GITHUB_OUTPUT"
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
           ~/.cache/bazel
