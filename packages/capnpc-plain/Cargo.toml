@@ -13,5 +13,5 @@ once_cell = "1.19.0"
 prettyplease = "0.2.16"
 proc-macro2 = "1.0.78"
 quote = "1.0.35"
-serde = { version = "1.0.196", features = [ "derive" ]}
+serde = { version = "1.0.197", features = [ "derive" ]}
 syn = "2.0.50"
