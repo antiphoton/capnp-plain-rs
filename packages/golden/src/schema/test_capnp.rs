@@ -112,7 +112,7 @@ impl CapnpPlainStruct for TestAllTypes {
                 .map(|x| Box::new(TestAllTypes::from_node(x))),
             enum_field: TestEnum::decode(reader.read_u16(18u32, 0u16)),
             interface_field: (),
-            void_list: vec![],
+            void_list: reader.read_list(3u32, CapnpListNode::read_void_children),
             bool_list: reader.read_list(4u32, CapnpListNode::read_bool_children),
             int_8_list: reader.read_list(5u32, CapnpListNode::read_i8_children),
             int_16_list: reader.read_list(6u32, CapnpListNode::read_i16_children),
@@ -128,7 +128,7 @@ impl CapnpPlainStruct for TestAllTypes {
             data_list: vec![],
             struct_list: reader.read_list(17u32, CapnpListNode::read_struct_children),
             enum_list: reader.read_list(18u32, CapnpListNode::read_enum_children),
-            interface_list: vec![],
+            interface_list: reader.read_list(19u32, CapnpListNode::read_void_children),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
@@ -212,7 +212,7 @@ impl CapnpPlainStruct for TestDefaults {
                 .map(|x| Box::new(TestAllTypes::from_node(x))),
             enum_field: TestEnum::decode(reader.read_u16(18u32, 5u16)),
             interface_field: (),
-            void_list: vec![],
+            void_list: reader.read_list(3u32, CapnpListNode::read_void_children),
             bool_list: reader.read_list(4u32, CapnpListNode::read_bool_children),
             int_8_list: reader.read_list(5u32, CapnpListNode::read_i8_children),
             int_16_list: reader.read_list(6u32, CapnpListNode::read_i16_children),
@@ -228,7 +228,7 @@ impl CapnpPlainStruct for TestDefaults {
             data_list: vec![],
             struct_list: reader.read_list(17u32, CapnpListNode::read_struct_children),
             enum_list: reader.read_list(18u32, CapnpListNode::read_enum_children),
-            interface_list: vec![],
+            interface_list: reader.read_list(19u32, CapnpListNode::read_void_children),
         }
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {

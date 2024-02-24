@@ -109,7 +109,11 @@
     },
     "enum_field": "Baz",
     "interface_field": null,
-    "void_list": [],
+    "void_list": [
+      null,
+      null,
+      null
+    ],
     "bool_list": [
       false,
       true,
@@ -302,7 +306,14 @@
   },
   "enum_field": "Corge",
   "interface_field": null,
-  "void_list": [],
+  "void_list": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
   "bool_list": [
     true,
     false,
