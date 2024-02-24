@@ -74,6 +74,7 @@ fn define_type(context: &CompilerContext, ty: &Type, is_box: bool) -> Option<Tok
 
 fn read_list(_context: &CompilerContext, offset: u32, ty: &Type) -> Option<TokenStream> {
     let callback = match ty {
+        Type::Void => quote!(CapnpListNode::read_void_children),
         Type::Bool => quote!(CapnpListNode::read_bool_children),
         Type::Int8 => quote!(CapnpListNode::read_i8_children),
         Type::Uint8 => quote!(CapnpListNode::read_u8_children),

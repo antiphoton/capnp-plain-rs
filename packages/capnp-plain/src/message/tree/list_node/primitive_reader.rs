@@ -105,6 +105,21 @@ define_big_reader!(read_u64_children, u64);
 define_big_reader!(read_f64_children, f64);
 
 impl ListNode {
+    pub fn read_void_children(&self) -> Vec<()> {
+        match self {
+            Self::Scalar {
+                scalar_size,
+                list_len,
+                data: _,
+            } => {
+                if *scalar_size != ScalarSize::Void {
+                    return Vec::with_capacity(0);
+                }
+                std::iter::repeat(()).take(*list_len).collect()
+            }
+            _ => vec![],
+        }
+    }
     pub fn read_bool_children(&self) -> Vec<bool> {
         match self {
             Self::Scalar {
