@@ -43,9 +43,7 @@ fn define_type(context: &CompilerContext, ty: &Type, is_box: bool) -> Option<Tok
         Type::Text => quote!(String),
         Type::Data => quote!(Vec<u8>),
         Type::Struct(type_struct) => {
-            let Some(node) = context.get_node(type_struct.type_id) else {
-                return None;
-            };
+            let node = context.get_node(type_struct.type_id)?;
             let name = format_ident!("{}", context.get_full_name(node));
             if is_box {
                 quote!(Option<Box<#name>>)
@@ -54,16 +52,12 @@ fn define_type(context: &CompilerContext, ty: &Type, is_box: bool) -> Option<Tok
             }
         }
         Type::List(type_list) => {
-            let Some(item) = type_list.element_type.as_deref() else {
-                return None;
-            };
+            let item = type_list.element_type.as_deref()?;
             let item = define_type(context, item, false)?;
             quote!(Vec<#item>)
         }
         Type::Enum(type_enum) => {
-            let Some(node) = context.get_node(type_enum.type_id) else {
-                return None;
-            };
+            let node = context.get_node(type_enum.type_id)?;
             let name = format_ident!("{}", context.get_full_name(node));
             quote!(#name)
         }
@@ -100,9 +94,7 @@ fn read_list(_context: &CompilerContext, offset: u32, ty: &Type) -> Option<Token
 }
 
 fn read_slot(context: &CompilerContext, slot: &Field__Slot, is_box: bool) -> Option<TokenStream> {
-    let Some(ty) = slot.r#type.as_deref() else {
-        return None;
-    };
+    let ty = slot.r#type.as_deref()?;
     define_type(context, ty, is_box)?;
     let reader = format_ident!("reader");
     let offset = slot.offset;
@@ -134,9 +126,7 @@ fn read_slot(context: &CompilerContext, slot: &Field__Slot, is_box: bool) -> Opt
             quote!(#reader.read_text(#offset))
         }
         (Type::Struct(type_struct), _) => {
-            let Some(node) = context.get_node(type_struct.type_id) else {
-                return None;
-            };
+            let node = context.get_node(type_struct.type_id)?;
             let name = format_ident!("{}", context.get_full_name(node));
             let r = quote!(#reader.read_struct(#offset));
             if is_box {
@@ -146,9 +136,7 @@ fn read_slot(context: &CompilerContext, slot: &Field__Slot, is_box: bool) -> Opt
             }
         }
         (Type::List(type_list), _) => {
-            let Some(ty) = type_list.element_type.as_deref() else {
-                return None;
-            };
+            let ty = type_list.element_type.as_deref()?;
             read_list(context, offset, ty).unwrap_or_else(|| quote!(vec![]))
         }
         (Type::Enum(type_enum), default_value) => {
@@ -156,9 +144,7 @@ fn read_slot(context: &CompilerContext, slot: &Field__Slot, is_box: bool) -> Opt
                 Value::Enum(x) => *x,
                 _ => 0,
             };
-            let Some(node) = context.get_node(type_enum.type_id) else {
-                return None;
-            };
+            let node = context.get_node(type_enum.type_id)?;
             let name = format_ident!("{}", context.get_full_name(node));
             quote!(#name::decode(#reader.read_u16(#offset, #default_value)))
         }
@@ -180,9 +166,7 @@ fn write_list(offset: u32, ty: &Type, value: TokenStream) -> Option<TokenStream>
 }
 
 fn write_slot(slot: &Field__Slot, value: TokenStream, is_box: bool) -> Option<TokenStream> {
-    let Some(ty) = slot.r#type.as_deref() else {
-        return None;
-    };
+    let ty = slot.r#type.as_deref()?;
     let writer = format_ident!("writer");
     let offset = slot.offset;
     let default_value = slot.default_value.as_deref().unwrap_or(&Value::Void);
@@ -220,9 +204,7 @@ fn write_slot(slot: &Field__Slot, value: TokenStream, is_box: bool) -> Option<To
             }
         }
         (Type::List(type_list), _) => {
-            let Some(ty) = type_list.element_type.as_deref() else {
-                return None;
-            };
+            let ty = type_list.element_type.as_deref()?;
             write_list(offset, ty, value)?
         }
         (Type::Enum(_type_enum), default_value) => {
@@ -251,9 +233,7 @@ fn generate_common_struct(
             let name = field_ident(&field.0.name);
             match &field.1 {
                 Field_1::Slot(slot) => {
-                    let Some(ty) = slot.r#type.as_deref() else {
-                        return None;
-                    };
+                    let ty = slot.r#type.as_deref()?;
                     let ty = define_type(context, ty, true)?;
                     Some(quote! {
                         pub #name: #ty,
@@ -339,9 +319,7 @@ fn generate_variant_struct(
             let field_name = format_ident!("{}", field.0.name.to_case(Case::UpperCamel));
             match &field.1 {
                 Field_1::Slot(slot) => {
-                    let Some(ty) = slot.r#type.as_deref() else {
-                        return None;
-                    };
+                    let ty = slot.r#type.as_deref()?;
                     if ty == &Type::Void {
                         Some(quote! {
                             #field_name,
