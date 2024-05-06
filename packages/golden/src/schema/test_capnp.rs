@@ -141,6 +141,8 @@ impl CapnpPlainStruct for TestAllTypes {
         writer.write_u16(9u32, self.u_int_16_field, 0u16);
         writer.write_u32(5u32, self.u_int_32_field, 0u32);
         writer.write_u64(3u32, self.u_int_64_field, 0u64);
+        writer.write_f32(8u32, self.float_32_field, 0f32);
+        writer.write_f64(5u32, self.float_64_field, 0f64);
         writer.write_text(0u32, &self.text_field);
         if let Some(child) = &self.struct_field {
             writer.write_struct_pointer(2u32, child.to_node());
@@ -241,6 +243,13 @@ impl CapnpPlainStruct for TestDefaults {
         writer.write_u16(9u32, self.u_int_16_field, 45678u16);
         writer.write_u32(5u32, self.u_int_32_field, 3456789012u32);
         writer.write_u64(3u32, self.u_int_64_field, 12345678901234567890u64);
+        writer.write_f32(8u32, self.float_32_field, 1234.5f32);
+        writer
+            .write_f64(
+                5u32,
+                self.float_64_field,
+                -123000000000000000000000000000000000000000000000f64,
+            );
         writer.write_text(0u32, &self.text_field);
         if let Some(child) = &self.struct_field {
             writer.write_struct_pointer(2u32, child.to_node());
@@ -1653,7 +1662,10 @@ impl CapnpPlainStruct for TestLateUnion__TheUnion {
                 0u16
             }
             Self::Corge(..) => 1u16,
-            Self::Grault(..) => 2u16,
+            Self::Grault(value) => {
+                writer.write_f32(2u32, (*value), 0f32);
+                2u16
+            }
             _ => {
                 return;
             }
@@ -1684,7 +1696,10 @@ impl CapnpPlainStruct for TestLateUnion__AnotherUnion {
                 0u16
             }
             Self::Corge(..) => 1u16,
-            Self::Grault(..) => 2u16,
+            Self::Grault(value) => {
+                writer.write_f32(4u32, (*value), 0f32);
+                2u16
+            }
             _ => {
                 return;
             }
@@ -1947,7 +1962,10 @@ impl CapnpPlainStruct for TestWholeFloatDefault {
             big_field: reader.read_f32(1u32, 0.0),
         }
     }
-    fn update_node(&self, writer: &mut CapnpStructNode) {}
+    fn update_node(&self, writer: &mut CapnpStructNode) {
+        writer.write_f32(0u32, self.field, 123f32);
+        writer.write_f32(1u32, self.big_field, 2000000000000000000000000000000f32);
+    }
 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TestGenerics_0 {

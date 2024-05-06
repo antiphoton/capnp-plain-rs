@@ -581,8 +581,14 @@ impl CapnpPlainStruct for Value {
                 writer.write_u64(1u32, (*value), 0u64);
                 9u16
             }
-            Self::Float32(..) => 10u16,
-            Self::Float64(..) => 11u16,
+            Self::Float32(value) => {
+                writer.write_f32(1u32, (*value), 0f32);
+                10u16
+            }
+            Self::Float64(value) => {
+                writer.write_f64(1u32, (*value), 0f64);
+                11u16
+            }
             Self::Text(value) => {
                 writer.write_text(0u32, &(*value));
                 12u16

@@ -189,6 +189,10 @@ fn write_slot(slot: &Field__Slot, value: TokenStream, is_box: bool) -> Option<To
         (Type::Uint32, _) => quote!(#writer.write_u32(#offset, #value, 0);),
         (Type::Uint64, Value::Uint64(x)) => quote!(#writer.write_u64(#offset, #value, #x);),
         (Type::Uint64, _) => quote!(#writer.write_u64(#offset, #value, 0);),
+        (Type::Float32, Value::Float32(x)) => quote!(#writer.write_f32(#offset, #value, #x);),
+        (Type::Float32, _) => quote!(#writer.write_f32(#offset, #value, 0.0);),
+        (Type::Float64, Value::Float64(x)) => quote!(#writer.write_f64(#offset, #value, #x);),
+        (Type::Float64, _) => quote!(#writer.write_f64(#offset, #value, 0.0);),
         (Type::Text, _) => {
             quote!(#writer.write_text(#offset, &#value);)
         }
