@@ -78,7 +78,10 @@ impl CapnpPlainStruct for PaperSize {
                 writer.write_u16(0u32, (*value).encode(), 0u16);
                 0u16
             }
-            Self::Custom(value) => 1u16,
+            Self::Custom(value) => {
+                writer.write_struct_pointer(0u32, (*value).to_node());
+                1u16
+            }
             _ => {
                 return;
             }

@@ -144,6 +144,7 @@ impl CapnpPlainStruct for TestAllTypes {
         writer.write_f32(8u32, self.float_32_field, 0f32);
         writer.write_f64(5u32, self.float_64_field, 0f64);
         writer.write_text(0u32, &self.text_field);
+        writer.write_data(1u32, &self.data_field);
         if let Some(child) = &self.struct_field {
             writer.write_struct_pointer(2u32, child.to_node());
         }
@@ -251,6 +252,7 @@ impl CapnpPlainStruct for TestDefaults {
                 -123000000000000000000000000000000000000000000000f64,
             );
         writer.write_text(0u32, &self.text_field);
+        writer.write_data(1u32, &self.data_field);
         if let Some(child) = &self.struct_field {
             writer.write_struct_pointer(2u32, child.to_node());
         }
@@ -1903,8 +1905,14 @@ impl CapnpPlainStruct for TestStructUnion__Un {
     }
     fn update_node(&self, writer: &mut CapnpStructNode) {
         let discriminant_value = match self {
-            Self::Struct(value) => 0u16,
-            Self::Object(value) => 1u16,
+            Self::Struct(value) => {
+                writer.write_struct_pointer(0u32, (*value).to_node());
+                0u16
+            }
+            Self::Object(value) => {
+                writer.write_struct_pointer(0u32, (*value).to_node());
+                1u16
+            }
             _ => {
                 return;
             }
@@ -2706,7 +2714,10 @@ impl CapnpPlainStruct for TestNameAnnotation__BadlyNamedUnion {
                 value.update_node(writer);
                 0u16
             }
-            Self::Baz(value) => 1u16,
+            Self::Baz(value) => {
+                writer.write_struct_pointer(0u32, (*value).to_node());
+                1u16
+            }
             _ => {
                 return;
             }
