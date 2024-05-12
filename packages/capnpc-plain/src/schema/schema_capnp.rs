@@ -593,7 +593,10 @@ impl CapnpPlainStruct for Value {
                 writer.write_text(0u32, &(*value));
                 12u16
             }
-            Self::Data(..) => 13u16,
+            Self::Data(value) => {
+                writer.write_data(0u32, &(*value));
+                13u16
+            }
             Self::List(..) => 14u16,
             Self::Enum(value) => {
                 writer.write_u16(1u32, (*value), 0u16);
@@ -834,7 +837,10 @@ impl CapnpPlainStruct for Brand__Binding {
     fn update_node(&self, writer: &mut CapnpStructNode) {
         let discriminant_value = match self {
             Self::Unbound => 0u16,
-            Self::Type(value) => 1u16,
+            Self::Type(value) => {
+                writer.write_struct_pointer(0u32, (*value).to_node());
+                1u16
+            }
             _ => {
                 return;
             }

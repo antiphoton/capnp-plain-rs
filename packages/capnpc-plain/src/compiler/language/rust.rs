@@ -196,6 +196,9 @@ fn write_slot(slot: &Field__Slot, value: TokenStream, is_box: bool) -> Option<To
         (Type::Text, _) => {
             quote!(#writer.write_text(#offset, &#value);)
         }
+        (Type::Data, _) => {
+            quote!(#writer.write_data(#offset, &#value);)
+        }
         (Type::Struct(_type_struct), _) => {
             if is_box {
                 quote! {
@@ -204,7 +207,9 @@ fn write_slot(slot: &Field__Slot, value: TokenStream, is_box: bool) -> Option<To
                     }
                 }
             } else {
-                quote! {}
+                quote! {
+                    #writer.write_struct_pointer(#offset, #value.to_node());
+                }
             }
         }
         (Type::List(type_list), _) => {

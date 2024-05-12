@@ -73,6 +73,14 @@ define_big_writer!(write_u64, u64);
 define_big_writer!(write_f64, f64);
 
 impl StructNode {
+    pub fn write_data(&mut self, offset: u32, data: &[u8]) {
+        if data.is_empty() {
+            self.remove_pointer(offset);
+        } else {
+            let child = ListNode::write_u8_children(data);
+            self.write_list_pointer(offset, child);
+        }
+    }
     pub fn write_text(&mut self, offset: u32, data: &str) {
         if data.is_empty() {
             self.remove_pointer(offset);
