@@ -10,7 +10,7 @@ pub struct WordRef<'a> {
     offset: usize,
 }
 
-impl<'a> Deref for WordRef<'a> {
+impl Deref for WordRef<'_> {
     type Target = Word;
     fn deref(&self) -> &Self::Target {
         let segment = &self.message.segments[self.segment_id];
@@ -42,7 +42,7 @@ impl<'a> WordRef<'a> {
     }
 }
 
-impl<'a> std::fmt::Debug for WordRef<'a> {
+impl std::fmt::Debug for WordRef<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let location = format!("[{}][{}]", self.segment_id, self.offset,);
         let data = self.message.segments[self.segment_id].words[self.offset];
