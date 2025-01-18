@@ -42,7 +42,7 @@ impl<'a> WordSlice<'a> {
     }
 }
 
-impl<'a> std::fmt::Debug for WordSlice<'a> {
+impl std::fmt::Debug for WordSlice<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let location = format!(
             "[{}][{}:{}]",
